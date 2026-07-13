@@ -19,7 +19,12 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState(initialErrors);
-  
+
+  // Paso del flujo: "credentials" (email + password) o "twofactor" (código).
+  const [step, setStep] = useState("credentials");
+  const [code, setCode] = useState("");
+  const [codeError, setCodeError] = useState(false);
+
   const [alertData, setAlertData] = useState({
     show: false,
     message: "",
@@ -28,6 +33,7 @@ const Login = () => {
 
   const emailRef = useRef(null);
   const passwordRef = useRef(null);
+  const codeRef = useRef(null);
 
   const handleEmailChange = (event) => {
     setEmail(event.target.value);
@@ -47,6 +53,30 @@ const Login = () => {
 
   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const validatePassword = (password) => /^[A-Za-z\d]{8,}$/.test(password);
+
+  // Completa el login una vez que tenemos un token válido (sea directo o
+  // después de verificar el 2FA).
+  const completeLogin = (token) => {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    const role = payload.role;
+
+    onLogin(token, role);
+
+    setAlertData({
+      show: true,
+      message: "¡Inicio de sesión exitoso!",
+      type: "success",
+    });
+
+    setEmail("");
+    setPassword("");
+    setCode("");
+    setStep("credentials");
+
+    setTimeout(() => {
+      navigate("/shipment");
+    }, 1500);
+  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -89,29 +119,27 @@ const Login = () => {
       if (!response.ok) {
         setAlertData({
           show: true,
-          message: data.message || "Error al iniciar sesión",
+          message: data.error || data.message || "Error al iniciar sesión",
           type: "error",
         });
         return;
       }
 
-      const payload = JSON.parse(atob(data.token.split(".")[1]));
-      const role = payload.role;
+      // El backend puede pedir un segundo factor: en ese caso el token viene
+      // vacío y hay que verificar el código enviado por email.
+      if (data.requiresTwoFactor) {
+        setStep("twofactor");
+        setCode("");
+        setCodeError(false);
+        setAlertData({
+          show: true,
+          message: "Te enviamos un código de verificación a tu correo.",
+          type: "info",
+        });
+        return;
+      }
 
-      onLogin(data.token, role);
-
-      setAlertData({
-        show: true,
-        message: "¡Inicio de sesión exitoso!",
-        type: "success",
-      });
-
-      setEmail("");
-      setPassword("");
-
-      setTimeout(() => {
-        navigate("/shipment");
-      }, 1500);
+      completeLogin(data.token);
     } catch (error) {
       console.error("Login error:", error);
       setAlertData({
@@ -120,6 +148,54 @@ const Login = () => {
         type: "error",
       });
     }
+  };
+
+  const handleVerifyTwoFactor = async (event) => {
+    event.preventDefault();
+
+    if (!code.trim()) {
+      setCodeError(true);
+      codeRef.current.focus();
+      return;
+    }
+
+    setCodeError(false);
+
+    try {
+      const response = await fetch(`${API_URL}/api/auth/verify-2fa`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, code: code.trim() }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setAlertData({
+          show: true,
+          message: data.error || data.message || "Código incorrecto o expirado.",
+          type: "error",
+        });
+        return;
+      }
+
+      completeLogin(data.token);
+    } catch (error) {
+      console.error("2FA verify error:", error);
+      setAlertData({
+        show: true,
+        message: "Ocurrió un error al verificar el código.",
+        type: "error",
+      });
+    }
+  };
+
+  const handleBackToCredentials = () => {
+    setStep("credentials");
+    setCode("");
+    setCodeError(false);
+    setPassword("");
+    setAlertData({ show: false, message: "", type: "info" });
   };
 
   return (
@@ -136,6 +212,7 @@ const Login = () => {
           />
           <Row>
             <Col>
+            {step === "credentials" ? (
             <Form noValidate onSubmit={handleSubmit}>
               <CustomCard
             title="INICIAR SESIÓN"
@@ -208,9 +285,55 @@ const Login = () => {
                       </Link>
                     </Form.Label>
                   </div>
-          
+
               </CustomCard>
               </Form>
+            ) : (
+            <Form noValidate onSubmit={handleVerifyTwoFactor}>
+              <CustomCard
+            title="VERIFICACIÓN"
+            buttonText="Verificar"
+            buttonType="submit">
+                  <p className="text-center mb-3">
+                    Ingresá el código que enviamos a <strong>{email}</strong>.
+                  </p>
+                  <Form.Group className="inputs-group mb-3 fw-bold">
+                    <Form.Label>Código de verificación: <span className="text-danger">*</span></Form.Label>
+                    <Form.Control
+                      ref={codeRef}
+                      className={`custom-input ${codeError ? "invalid" : ""}`}
+                      type="text"
+                      inputMode="numeric"
+                      placeholder="Ej: 123456"
+                      value={code}
+                      onChange={(e) => {
+                        setCode(e.target.value);
+                        setCodeError(false);
+                      }}
+                      autoComplete="one-time-code"
+                    />
+                    {codeError && (
+                      <p className="text-danger mt-1">
+                        Debe ingresar el código de verificación
+                      </p>
+                    )}
+                  </Form.Group>
+
+                  <div className="inputs-group mt-3 text-center">
+                    <Form.Label>
+                      <span
+                        className="text-decoration-none custom-link"
+                        style={{ cursor: "pointer" }}
+                        onClick={handleBackToCredentials}
+                      >
+                        Volver
+                      </span>
+                    </Form.Label>
+                  </div>
+
+              </CustomCard>
+              </Form>
+            )}
             </Col>
           </Row>
           </div>
