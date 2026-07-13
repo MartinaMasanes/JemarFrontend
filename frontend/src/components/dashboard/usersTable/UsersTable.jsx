@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Container } from "react-bootstrap";
+import { API_URL } from "../../../api/config";
 
 const UsersTable = () => {
   const [users, setUsers] = useState([]);
@@ -17,7 +18,7 @@ const UsersTable = () => {
 
     try {
       setLoading(true);
-      const response = await fetch("http://localhost:3000/api/user", {
+      const response = await fetch(`${API_URL}/api/user`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

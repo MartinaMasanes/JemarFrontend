@@ -3,6 +3,7 @@ import { Form } from "react-bootstrap";
 
 import { initialErrors } from "./ModifyRole.data";
 import { AuthContext } from "../../authContext/AuthContext";
+import { API_URL } from "../../../api/config";
 
 import CustomCard from "../../card/CustomCard";
 import CustomAlert from "../../alert/CustomAlert";
@@ -69,7 +70,7 @@ const ModifyRole = () => {
     }
 
     try {
-      const response = await fetch("http://localhost:3000/api/user/changeRole", {
+      const response = await fetch(`${API_URL}/api/user/role`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
