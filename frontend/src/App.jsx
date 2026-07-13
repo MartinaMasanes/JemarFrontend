@@ -10,7 +10,7 @@ import UserRegister from "./components/register/UserRegister";
 import Shipments from "./components/shipment/Shipments";
 import Modify from "./components/modify/Modify";
 import Dashboard from "./components/dashboard/Dashboard";
-import ErrorNotLogged from "./components/error/errorNotLogged/ErrorNotLogged";
+import ErrorNotLogged from "./components/error/errorNotLogged/errorNotLogged";
 
 import Protected from "./components/protected/Protected";
 import RoleProtected from "./components/protected/RoleProtected";
