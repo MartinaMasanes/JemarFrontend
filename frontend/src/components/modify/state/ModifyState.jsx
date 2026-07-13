@@ -3,6 +3,7 @@ import { Form } from "react-bootstrap";
 
 import { initialErrors } from "./ModifyState.data";
 import { AuthContext } from "../../authContext/AuthContext";
+import { API_URL } from "../../../api/config";
 
 import CustomCard from "../../card/CustomCard";
 import CustomAlert from "../../alert/CustomAlert";
@@ -77,7 +78,7 @@ const ModifyState = () => {
   const updateShipment = async () => {
     try {
       const response = await fetch(
-        `http://localhost:3000/api/shipment/${shipmentId}`,
+        `${API_URL}/api/shipment/${shipmentId}/status`,
         {
           method: "PUT",
           headers: {
@@ -94,7 +95,7 @@ const ModifyState = () => {
         throw new Error(data.error || "Error al actualizar estado");
 
       const getResponse = await fetch(
-        `http://localhost:3000/api/shipment/${shipmentId}`,
+        `${API_URL}/api/shipment/${shipmentId}`,
         {
           method: "GET",
           headers: {

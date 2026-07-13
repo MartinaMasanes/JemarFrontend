@@ -4,6 +4,7 @@ import CustomAlert from "../../alert/CustomAlert";
 import CustomCard from "../../card/CustomCard";
 import CustomModal from "../../modal/CustomModal";
 import { AuthContext } from "../../authContext/AuthContext";
+import { API_URL } from "../../../api/config";
 
 function ShippingTrack() {
   const { token } = useContext(AuthContext);
@@ -62,7 +63,7 @@ function ShippingTrack() {
 
     try {
       const response = await fetch(
-        `http://localhost:3000/api/shipment/${trackingNumber}`,
+        `${API_URL}/api/shipment/${trackingNumber}`,
         {
           method: "GET",
           headers: {

@@ -3,6 +3,7 @@ import { Form } from "react-bootstrap";
 
 import { initialErrors } from "./CreateShipment.data";
 import { AuthContext } from "../../authContext/AuthContext";
+import { API_URL } from "../../../api/config";
 
 import CustomModal from "../../modal/CustomModal";
 import CustomCard from "../../card/CustomCard";
@@ -44,7 +45,7 @@ const ShippingQuote = () => {
   }
 
   useEffect(() => {
-    fetch("http://localhost:3000/api/shipment_type")
+    fetch(`${API_URL}/api/shipment_type`)
       .then((res) => res.json())
       .then((data) => {
         console.log("Tipos cargados:", data);
@@ -156,7 +157,7 @@ const ShippingQuote = () => {
     }
 
     try {
-      const response = await fetch("http://localhost:3000/api/shipment", {
+      const response = await fetch(`${API_URL}/api/shipment`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

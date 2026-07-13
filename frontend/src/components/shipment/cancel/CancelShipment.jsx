@@ -4,6 +4,7 @@ import CustomCard from "../../card/CustomCard";
 import CustomAlert from "../../alert/CustomAlert";
 import CustomModal from "../../modal/CustomModal";
 import { AuthContext } from "../../authContext/AuthContext";
+import { API_URL } from "../../../api/config";
 
 const DeleteShipping = () => {
   const { token } = useContext(AuthContext);
@@ -59,7 +60,7 @@ const DeleteShipping = () => {
     }
     try {
       const response = await fetch(
-        `http://localhost:3000/api/shipment/${shipmentId}`,
+        `${API_URL}/api/shipment/${shipmentId}`,
         {
           headers: {
             "Content-Type": "application/json",
@@ -95,7 +96,7 @@ const DeleteShipping = () => {
   const cancelShipment = async () => {
     try {
       const response = await fetch(
-        `http://localhost:3000/api/shipment/${shipmentId}`,
+        `${API_URL}/api/shipment/${shipmentId}`,
         {
           method: "DELETE",
           headers: {

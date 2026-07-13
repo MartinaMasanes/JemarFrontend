@@ -2,6 +2,7 @@ import { Form } from "react-bootstrap";
 import { useRef, useState } from "react";
 
 import { initialErrors } from "./Consult.data";
+import { API_URL } from "../../../api/config";
 
 import CustomCard from "../../card/CustomCard";
 import CustomAlert from "../../alert/CustomAlert";
@@ -94,7 +95,7 @@ const Consult = () => {
     const consultData = { firstName, lastName, email, consult };
 
     try {
-      const response = await fetch("http://localhost:3000/api/consult", {
+      const response = await fetch(`${API_URL}/api/inquiry`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(consultData),

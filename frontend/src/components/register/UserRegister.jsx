@@ -3,6 +3,7 @@ import { Form } from "react-bootstrap";
 import { useNavigate } from "react-router-dom";
 
 import { initialErrors } from "./UserRegister.data.js";
+import { API_URL } from "../../api/config";
 
 import Background from "../background/Background";
 import BackArrow from "../back/BackArrow";
@@ -111,7 +112,7 @@ const UserRegister = () => {
     const user = { firstName, lastName, email, password };
 
     try {
-      const response = await fetch("http://localhost:3000/api/auth/register", {
+      const response = await fetch(`${API_URL}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(user),
