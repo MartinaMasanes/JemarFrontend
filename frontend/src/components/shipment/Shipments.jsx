@@ -18,7 +18,7 @@ const Shipments = () => {
 
   return (
     <>
-      <Background image="/images/ImageShipment.png">
+      <Background image="/images/ImageShipment.webp">
         <BackArrow />
         <Container className="d-flex align-items-center min-vh-100 flex-column">
 

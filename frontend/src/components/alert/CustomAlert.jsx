@@ -31,7 +31,7 @@ const CustomAlert = ({ show, onClose, message, type = "info", duration = 5000 })
           style={{ backgroundColor: bgColor }}
           onClick={(e) => e.stopPropagation()}
         >
-          <img src="/images/ImageRobot.png" alt="Robot" className="custom-alert-image p-1" />
+          <img src="/images/ImageRobot.webp" alt="Robot" loading="lazy" className="custom-alert-image p-1" />
           <div>
             <p className="custom-alert-message fs-5 mb-0 text-center">{message}</p>
           </div>

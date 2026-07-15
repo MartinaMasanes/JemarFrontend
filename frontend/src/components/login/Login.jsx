@@ -200,7 +200,7 @@ const Login = () => {
 
   return (
     <>
-      <Background image="/images/ImageLogin.png">
+      <Background image="/images/ImageLogin.webp">
         <BackArrow />
         <Container className="d-flex align-items-center min-vh-100 flex-column pt-3">
           <div className="screen d-flex justify-content-center w-100">

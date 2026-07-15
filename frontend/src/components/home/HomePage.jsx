@@ -49,7 +49,7 @@ const HomePage = () => {
   console.log("ROLE:", role);
   return (
     <>
-      <Background image="/images/ImageHome.png">
+      <Background image="/images/ImageHome.webp">
         <Container className="d-flex justify-content-center align-items-center min-vh-100 flex-column">
           {IsTokenValid(token) ? (
             <>
@@ -84,7 +84,7 @@ const HomePage = () => {
 
       <div className="blackLine"></div>
 
-      <Background image="/images/ImageHome1.png">
+      <Background image="/images/ImageHome1.webp">
         <div className="color-bacground d-flex justify-content-center align-items-center min-vh-100 flex-column">
           <h2 className="title-card mt-5" style={{ fontSize: "2.5rem" }}>
             Recomendaciones para embalar tu paquete
