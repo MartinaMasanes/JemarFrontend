@@ -155,7 +155,7 @@ const UserRegister = () => {
 
   return (
     <>
-      <Background image="/images/ImageRegister.png">
+      <Background image="/images/ImageRegister.webp">
         <BackArrow />
         <div className="screen d-flex justify-content-start">
           <CustomAlert

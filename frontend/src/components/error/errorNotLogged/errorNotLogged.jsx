@@ -11,7 +11,7 @@ const ErrorNotLogged = () => {
   };
 
   return (
-    <Background image="/images/ImageErrorNotFound.png">
+    <Background image="/images/ImageErrorNotFound.webp">
       <Container className="d-flex flex-column justify-content-end align-items-start min-vh-100">
         <div className="text-start mb-5">
           <h1 className="titulo fw-bold mb-1 text-start text-danger">

@@ -9,7 +9,7 @@ const ContactForm = () => {
 
   return (
     <>
-      <Background image="/images/ImageShipment.png">
+      <Background image="/images/ImageShipment.webp">
         <BackArrow />
         <Container className="d-flex align-items-center min-vh-100 flex-column pt-3">
           <div className="screen d-flex justify-content-center w-100">
