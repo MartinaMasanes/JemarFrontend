@@ -25,6 +25,9 @@ const Login = () => {
   const [code, setCode] = useState("");
   const [codeError, setCodeError] = useState(false);
 
+  // Mientras esperamos al backend, para deshabilitar el botón y mostrar spinner.
+  const [loading, setLoading] = useState(false);
+
   const [alertData, setAlertData] = useState({
     show: false,
     message: "",
@@ -75,7 +78,7 @@ const Login = () => {
 
     setTimeout(() => {
       navigate("/shipment");
-    }, 1500);
+    }, 800);
   };
 
   const handleSubmit = async (event) => {
@@ -106,6 +109,7 @@ const Login = () => {
     }
 
     setErrors(initialErrors);
+    setLoading(true);
 
     try {
       const response = await fetch(`${API_URL}/api/auth/login`, {
@@ -148,6 +152,8 @@ const Login = () => {
         message: "Ocurrió un error al iniciar sesión.",
         type: "error",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -161,6 +167,7 @@ const Login = () => {
     }
 
     setCodeError(false);
+    setLoading(true);
 
     try {
       const response = await fetch(`${API_URL}/api/auth/verify-2fa`, {
@@ -188,6 +195,8 @@ const Login = () => {
         message: "Ocurrió un error al verificar el código.",
         type: "error",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -218,7 +227,9 @@ const Login = () => {
               <CustomCard
             title="INICIAR SESIÓN"
             buttonText="Iniciar"
-            buttonType="submit">
+            buttonType="submit"
+            loading={loading}
+            loadingText="Ingresando...">
                   <Form.Group className="inputs-group mb-3 fw-bold">
                     <Form.Label>Correo Electrónico: <span className="text-danger">*</span></Form.Label>
                     <Form.Control
@@ -294,7 +305,9 @@ const Login = () => {
               <CustomCard
             title="VERIFICACIÓN"
             buttonText="Verificar"
-            buttonType="submit">
+            buttonType="submit"
+            loading={loading}
+            loadingText="Verificando...">
                   <p className="text-center mb-3">
                     Ingresá el código que enviamos a <strong>{email}</strong>.
                   </p>

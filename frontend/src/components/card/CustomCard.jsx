@@ -1,4 +1,4 @@
-import { Container, Button } from "react-bootstrap";
+import { Container, Button, Spinner } from "react-bootstrap";
 
 const CustomCard = ({
   title,
@@ -6,6 +6,8 @@ const CustomCard = ({
   buttonText,
   buttonAction,
   buttonType = "button",
+  loading = false,
+  loadingText = "Procesando...",
 }) => {
   return (
     <Container className="d-flex justify-content-center">
@@ -27,8 +29,23 @@ const CustomCard = ({
               className="custom-button w-50"
               type={buttonType}
               onClick={buttonAction}
+              disabled={loading}
             >
-              {buttonText}
+              {loading ? (
+                <>
+                  <Spinner
+                    as="span"
+                    animation="border"
+                    size="sm"
+                    role="status"
+                    aria-hidden="true"
+                    className="me-2"
+                  />
+                  {loadingText}
+                </>
+              ) : (
+                buttonText
+              )}
             </Button>
           </div>
         )}
