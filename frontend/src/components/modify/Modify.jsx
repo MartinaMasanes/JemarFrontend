@@ -16,7 +16,7 @@ const Modify = () => {
 
   const buttonsByRole = {
     SuperAdmin: ["status", "roles", "low"],
-    Empleado: ["status"],
+    Employee: ["status"],
   };
 
     const allowedButtons = token ? buttonsByRole[role] || [] : [];
