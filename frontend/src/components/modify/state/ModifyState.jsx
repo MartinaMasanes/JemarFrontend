@@ -63,7 +63,7 @@ const ModifyState = () => {
       setErrors((prev) => ({ ...prev, status: false }));
     }
 
-    if (role !== "Empleado" && role !== "SuperAdmin") {
+    if (role !== "Employee" && role !== "SuperAdmin") {
       setAlertData({
         show: true,
         message: "No tienes permisos para modificar este envío.",

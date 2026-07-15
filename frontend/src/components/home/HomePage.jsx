@@ -21,8 +21,8 @@ const HomePage = () => {
 
   const buttonsByRole = {
     SuperAdmin: ["shipment", "modify", "dashboard"],
-    Empleado: ["shipment", "modify"],
-    Usuario: ["shipment"],
+    Employee: ["shipment", "modify"],
+    Client: ["shipment"],
   };
 
   const allowedButtons = token ? buttonsByRole[role] || [] : [];
@@ -44,9 +44,6 @@ const HomePage = () => {
     const route = routes[buttonKey];
     if (route) navigate(route);
   };
-  console.log("TOKEN:", token);
-  console.log("VALIDO:", IsTokenValid(token));
-  console.log("ROLE:", role);
   return (
     <>
       <Background image="/images/ImageHome.webp">
