@@ -3,6 +3,7 @@
 
 body {
   font-family: 'Quicksand', sans-serif !important;
+  overflow-x: hidden;
 }
 
 /*Header and Footer*/
@@ -325,4 +326,114 @@ label,
 
 .container-modal .btn-close {
   background-color: #B07F11;
+}
+
+/* ===================================================================
+   Responsive (mobile / tablet)
+   El diseño de escritorio usa unidades fijas (25vw, paddings de 50px)
+   que rompen en pantallas chicas. Estos breakpoints solo ajustan lo
+   necesario; el layout de escritorio queda intacto.
+   =================================================================== */
+
+/* Tablets y celulares grandes */
+@media (max-width: 992px) {
+  /* Los rows de Bootstrap tienen márgenes negativos (gutter) que se desbordan
+     cuando el row no está dentro de un .container con padding. Los anulamos en
+     mobile, donde las columnas se apilan a ancho completo igual. El !important
+     es necesario para ganarle al orden de carga del CSS de Bootstrap. */
+  .row {
+    --bs-gutter-x: 0 !important;
+  }
+
+  /* Permite que el row y sus columnas se achiquen por debajo del ancho de su
+     contenido (por defecto un flex item no baja de su min-content y desborda).
+     El row también es flex item cuando su padre es un d-flex. */
+  .row,
+  .row > * {
+    min-width: 0;
+  }
+
+  /* Evita que títulos largos empujen el ancho más allá de la pantalla. */
+  .title-card,
+  .titulo,
+  .sub-titulo {
+    overflow-wrap: break-word;
+  }
+
+  .small-container {
+    width: 100%;
+    max-width: 440px;
+    height: auto;
+    max-height: 80vh;
+  }
+
+  .back-table {
+    width: 92vw;
+    height: auto;
+  }
+
+  .table-container {
+    display: block;
+    overflow-x: auto;
+  }
+
+  .map-container {
+    width: 100%;
+    max-width: 345px;
+    height: auto;
+    aspect-ratio: 345 / 305;
+  }
+
+  .screen {
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+}
+
+/* Celulares */
+@media (max-width: 576px) {
+  /* Las columnas de Bootstrap sin breakpoint (`col`) no se apilan solas: en el
+     celular las forzamos a ancho completo para que no queden aplastadas. */
+  .row > .col,
+  .row > [class^="col-"],
+  .row > [class*=" col-"] {
+    flex: 0 0 100% !important;
+    max-width: 100% !important;
+  }
+
+  .screen {
+    padding-top: 96px;
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+
+  .back-icon {
+    top: 72px;
+    right: 16px;
+  }
+
+  /* Títulos grandes escalados para pantallas angostas */
+  .title-card {
+    font-size: clamp(1.5rem, 8vw, 2.25rem) !important;
+  }
+
+  /* Header compacto para que entre en pantallas angostas */
+  .header {
+    height: auto;
+    padding: 6px 10px;
+  }
+
+  .brand-text {
+    font-size: 1.15rem !important;
+  }
+
+  .header .custom-link,
+  .header .custom-link-outlog,
+  .header .fs-3 {
+    font-size: 0.95rem !important;
+  }
+
+  .header .me-4 {
+    margin-right: 0.6rem !important;
+  }
 }
