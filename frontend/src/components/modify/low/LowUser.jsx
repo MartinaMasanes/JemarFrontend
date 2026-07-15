@@ -83,6 +83,7 @@ const LowUser = () => {
 
       setShowModal(true);
     } catch (error) {
+      console.error("Error verificando usuario:", error);
       setAlertData({
         show: true,
         message: "Error al verificar el usuario.",
@@ -96,24 +97,27 @@ const LowUser = () => {
       const response = await fetch(`${API_URL}/api/user/${email}`, {
         method: "DELETE",
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ email }),
       });
 
-      const data = await response.json();
-
       if (!response.ok) {
+        let message = "No se pudo eliminar el usuario.";
+        try {
+          const data = await response.json();
+          message = data.error || message;
+        } catch {
+          // Respuestas sin body JSON: usamos el mensaje por defecto
+        }
         setAlertData({
           show: true,
-          message: data.error,
+          message,
           type: "error",
         });
       } else {
         setAlertData({
           show: true,
-          message: data.message,
+          message: "¡Usuario eliminado con éxito!",
           type: "success",
         });
         setEmail("");
@@ -121,6 +125,7 @@ const LowUser = () => {
 
       setShowModal(false);
     } catch (error) {
+      console.error("Error eliminando usuario:", error);
       setAlertData({
         show: true,
         message: "Error de conexión con el servidor.",

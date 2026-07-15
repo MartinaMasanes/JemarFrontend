@@ -9,6 +9,18 @@ import CustomCard from "../../card/CustomCard";
 import CustomAlert from "../../alert/CustomAlert";
 import CustomModal from "../../modal/CustomModal";
 
+const roleMap = {
+  Client: 1,
+  Employee: 2,
+  SuperAdmin: 3,
+};
+
+const roleLabels = {
+  Client: "Usuario",
+  Employee: "Empleado",
+  SuperAdmin: "Super Admin",
+};
+
 const ModifyRole = () => {
   const { role, token } = useContext(AuthContext);
   const [email, setEmail] = useState("");
@@ -76,29 +88,35 @@ const ModifyRole = () => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ email, newRole }),
+        body: JSON.stringify({ email, roleId: roleMap[newRole] }),
       });
 
-      const data = await response.json();
-
       if (!response.ok) {
+        let message = "No se pudo modificar el rol.";
+        try {
+          const data = await response.json();
+          message = data.error || message;
+        } catch {
+          // 200/errores sin body JSON: usamos el mensaje por defecto
+        }
         setAlertData({
           show: true,
-          message: data.error,
+          message,
           type: "error",
         });
         return;
       }
 
       setModalData({
-        email: data.user.email,
-        role: data.user.newRole,
+        email,
+        role: roleLabels[newRole],
       });
       setShowModal(true);
       setEmail("");
       setNewRole("");
       setErrors(initialErrors);
     } catch (error) {
+      console.error("Error modificando rol:", error);
       setAlertData({
         show: true,
         message: "Error de conexión con el servidor.",
@@ -159,8 +177,8 @@ const ModifyRole = () => {
               <option value="" disabled hidden>
                 Seleccione un Rol
               </option>
-              <option value="Usuario">Usuario</option>
-              <option value="Empleado">Empleado</option>
+              <option value="Client">Usuario</option>
+              <option value="Employee">Empleado</option>
               <option value="SuperAdmin">Super Admin</option>
             </Form.Select>
             {errors.newRole === "empty" && (

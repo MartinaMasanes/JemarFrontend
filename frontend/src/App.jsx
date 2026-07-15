@@ -38,7 +38,7 @@ function App() {
             <Route path="/shipment" element={<Shipments />} />
 
             <Route
-              element={<RoleProtected allowedRoles={["Empleado", "SuperAdmin"]} />}
+              element={<RoleProtected allowedRoles={["Employee", "SuperAdmin"]} />}
             >
               <Route path="/modify" element={<Modify />} />
             </Route>
