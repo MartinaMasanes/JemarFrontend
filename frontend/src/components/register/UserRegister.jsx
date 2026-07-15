@@ -30,6 +30,9 @@ const UserRegister = () => {
   const [code, setCode] = useState("");
   const [codeError, setCodeError] = useState(false);
 
+  // Mientras esperamos al backend, para deshabilitar el botón y mostrar spinner.
+  const [loading, setLoading] = useState(false);
+
   const firstNameRef = useRef(null);
   const lastNameRef = useRef(null);
   const emailRef = useRef(null);
@@ -116,6 +119,7 @@ const UserRegister = () => {
     }
 
     const user = { firstName, lastName, email, password };
+    setLoading(true);
 
     try {
       const response = await fetch(`${API_URL}/api/auth/register`, {
@@ -152,6 +156,8 @@ const UserRegister = () => {
         message: "Ocurrió un error al registrarse.",
         type: "error",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -165,6 +171,7 @@ const UserRegister = () => {
     }
 
     setCodeError(false);
+    setLoading(true);
 
     try {
       const response = await fetch(`${API_URL}/api/auth/verify-2fa`, {
@@ -198,7 +205,7 @@ const UserRegister = () => {
 
       setTimeout(() => {
         navigate("/login");
-      }, 1500);
+      }, 1200);
     } catch (error) {
       console.error("Error verificando email:", error);
       setAlertData({
@@ -206,6 +213,8 @@ const UserRegister = () => {
         message: "Ocurrió un error al verificar el código.",
         type: "error",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -226,6 +235,8 @@ const UserRegister = () => {
                 title="REGISTRATE"
                 buttonText="Continuar"
                 buttonType="submit"
+                loading={loading}
+                loadingText="Registrando..."
               >
                 <Form.Group className="inputs-group mb-3 fw-bold">
                   <Form.Label>
@@ -348,6 +359,8 @@ const UserRegister = () => {
                 title="VERIFICÁ TU EMAIL"
                 buttonText="Verificar"
                 buttonType="submit"
+                loading={loading}
+                loadingText="Verificando..."
               >
                 <p className="text-center mb-3">
                   Ingresá el código que enviamos a <strong>{email}</strong>.
