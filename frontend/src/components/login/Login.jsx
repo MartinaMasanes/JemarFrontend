@@ -125,9 +125,10 @@ const Login = () => {
         return;
       }
 
-      // El backend puede pedir un segundo factor: en ese caso el token viene
-      // vacío y hay que verificar el código enviado por email.
-      if (data.requiresTwoFactor) {
+      // El backend puede pedir un código: por 2FA opcional, o porque el email
+      // todavía no está verificado. En ambos casos el token viene vacío y hay
+      // que verificar el código enviado por email (mismo paso).
+      if (data.requiresTwoFactor || data.requiresEmailVerification) {
         setStep("twofactor");
         setCode("");
         setCodeError(false);
