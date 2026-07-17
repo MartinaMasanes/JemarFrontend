@@ -54,6 +54,20 @@ body {
   border-color: #ffffff;
 }
 
+/* Estado de carga: el botón queda disabled (Ingresando/Registrando/Cotizando)
+   pero debe verse igual que un botón normal, sin atenuarse. */
+.btn.custom-button:disabled,
+.btn.custom-button.disabled,
+.shipping-select .custom-button:disabled,
+.container-modal .custom-button:disabled,
+.small-container .custom-button:disabled {
+  background-color: #B07F11;
+  color: #ffffff;
+  box-shadow: 0 0 10px #B07F11;
+  border-color: #ffffff;
+  opacity: 1;
+}
+
 /*Links*/
 .custom-link,
 .shipping-select .custom-link {
@@ -78,6 +92,7 @@ background-color: #000000;
 
 /*Inputs*/
 form .custom-input,
+.container-modal .custom-input,
 .shipping-select .form-select {
   background-color: #000000;
   color: #B07F11;
@@ -86,6 +101,7 @@ form .custom-input,
 }
 
 form .custom-input:focus,
+.container-modal .custom-input:focus,
 .shipping-select .form-select:focus {
   outline: none;
   background-color: #000000;
@@ -94,7 +110,8 @@ form .custom-input:focus,
   border-color: #ffffff;
 }
 
-form .custom-input::placeholder {
+form .custom-input::placeholder,
+.container-modal .custom-input::placeholder {
   color: #ffffff;
 }
 
@@ -298,13 +315,14 @@ label,
   background-color: #000000;
   color: #ffffff;
   position: relative;
-  min-width: 300px;
-  max-width: 150px;
-  max-height: 100px;
+  min-width: 260px;
+  max-width: 340px;
 }
 
 .custom-alert-message {
-  font-size: 1.2rem;
+  font-size: 1.1rem;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .custom-alert-image {
