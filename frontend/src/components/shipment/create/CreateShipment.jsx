@@ -9,14 +9,61 @@ import CustomModal from "../../modal/CustomModal";
 import CustomCard from "../../card/CustomCard";
 import CustomAlert from "../../alert/CustomAlert";
 
+// El backend devuelve los nombres del enum en inglés; los mostramos en español.
+const shipmentTypeLabels = {
+  Express: "Expreso",
+  Standard: "Estándar",
+};
+
+const packageSizeLabels = {
+  Small: "Pequeño",
+  Medium: "Mediano",
+  Large: "Grande",
+};
+
+const roleLabels = {
+  Employee: "un empleado",
+  SuperAdmin: "un superadministrador",
+  Client: "un cliente",
+};
+
 const ShippingQuote = () => {
-  const { token } = useContext(AuthContext);
+  const { token, role } = useContext(AuthContext);
+  const isStaff = role === "Employee" || role === "SuperAdmin";
 
   const [shipmentTypes, setShipmentTypes] = useState([]);
   const [shipmentTypeId, setShipmentTypeId] = useState("");
+  const [packageSizes, setPackageSizes] = useState([]);
+  const [packageSizeId, setPackageSizeId] = useState("");
+  const [clients, setClients] = useState([]);
+  const [clientId, setClientId] = useState("");
+  const [clientQuery, setClientQuery] = useState("");
+  const [clientSuggestions, setClientSuggestions] = useState([]);
+  const [showClientModal, setShowClientModal] = useState(false);
+  const [newClient, setNewClient] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+  });
+  const [newClientErrors, setNewClientErrors] = useState({
+    firstName: false,
+    lastName: false,
+    email: false,
+    password: false,
+  });
+  const [clientCreateError, setClientCreateError] = useState("");
+  const [creatingClient, setCreatingClient] = useState(false);
+  // Estado del correo tipeado cuando no coincide con ningún cliente cargado:
+  // "idle" | "checking" | "available" (no existe, se puede registrar) | "taken"
+  // (ya existe una cuenta con ese correo, sea del rol que sea).
+  const [emailStatus, setEmailStatus] = useState("idle");
+  // Rol de la cuenta dueña del correo cuando ya existe (para avisar al empleado).
+  const [emailTakenRole, setEmailTakenRole] = useState(null);
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
   const [errors, setErrors] = useState(initialErrors);
+  const [submitting, setSubmitting] = useState(false);
 
   const [alertData, setAlertData] = useState({
     show: false,
@@ -24,40 +71,45 @@ const ShippingQuote = () => {
     type: "info",
   });
 
-  const [showModal, setShowModal] = useState(false);
-  const [modalData, setModalData] = useState(null);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  // Cotización devuelta por el backend (id reservado + precio) sin crear el envío.
+  const [quote, setQuote] = useState(null);
   const [originSuggestions, setOriginSuggestions] = useState([]);
   const [destinationSuggestions, setDestinationSuggestions] = useState([]);
 
   const originRef = useRef(null);
   const destinationRef = useRef(null);
-
-  if (!token) {
-    return (
-      <div className="text-center mt-5">
-        <CustomAlert
-          show={true}
-          message="Debes iniciar sesión para acceder a esta sección."
-          type="error"
-        />
-      </div>
-    );
-  }
+  const debounceRef = useRef(null);
+  const emailCheckRef = useRef(null);
 
   useEffect(() => {
-    fetch(`${API_URL}/api/shipment_type`)
-      .then((res) => res.json())
-      .then((data) => {
-        console.log("Tipos cargados:", data);
-        setShipmentTypes(data);
-      })
-      .catch((err) => console.error("Error cargando tipos de envío:", err));
-  }, []);
+    if (!token) return;
 
-  let debounceTimeout;
-  const fetchLocalities = (query, type) => {
-    clearTimeout(debounceTimeout);
-    debounceTimeout = setTimeout(() => {
+    const authHeaders = { Authorization: `Bearer ${token}` };
+
+    fetch(`${API_URL}/api/shipment/types`, { headers: authHeaders })
+      .then((res) => res.json())
+      .then((data) => setShipmentTypes(data))
+      .catch((err) => console.error("Error cargando tipos de envío:", err));
+
+    fetch(`${API_URL}/api/shipment/package-sizes`, { headers: authHeaders })
+      .then((res) => res.json())
+      .then((data) => setPackageSizes(data))
+      .catch((err) =>
+        console.error("Error cargando tamaños de paquete:", err)
+      );
+
+    if (isStaff) {
+      fetch(`${API_URL}/api/shipment/clients`, { headers: authHeaders })
+        .then((res) => res.json())
+        .then((data) => setClients(data))
+        .catch((err) => console.error("Error cargando clientes:", err));
+    }
+  }, [token, isStaff]);
+
+  const fetchAddresses = (query, type) => {
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
       if (!query.trim()) {
         if (type === "origin") {
           setOriginSuggestions([]);
@@ -67,34 +119,201 @@ const ShippingQuote = () => {
         return;
       }
 
-      fetch(`https://apis.datos.gob.ar/georef/api/localidades?nombre=${query}`)
+      fetch(
+        `${API_URL}/api/shipment/address-search?q=${encodeURIComponent(query)}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
         .then((res) => res.json())
         .then((data) => {
-          const localities = data.localidades || [];
-
-          const uniqueLocalities = Array.from(
-      new Map(localities.map((loc) => [`${loc.nombre}-${loc.provincia.nombre}`, loc])).values()
-    );
-
-          const formattedLocalities = uniqueLocalities.map((loc, index) => ({
-            id: loc.id || `${loc.nombre}-${loc.provincia.nombre}-${index}`,
-            nombre: loc.nombre,
-            provincia: loc.provincia.nombre,
+          const suggestions = (data || []).map((item, index) => ({
+            id: `${item.displayName}-${index}`,
+            displayName: item.displayName,
           }));
           if (type === "origin") {
-            setOriginSuggestions(formattedLocalities);
+            setOriginSuggestions(suggestions);
           } else {
-            setDestinationSuggestions(formattedLocalities);
+            setDestinationSuggestions(suggestions);
           }
         })
-        .catch((err) => console.error("Error obteniendo localidades:", err));
+        .catch((err) => console.error("Error obteniendo direcciones:", err));
     }, 500);
   };
 
   const handleShipmentType = (event) => {
-    const value = event.target.value;
-    setShipmentTypeId(value);
+    setShipmentTypeId(event.target.value);
     setErrors((prev) => ({ ...prev, shipmentType: false }));
+  };
+
+  const handlePackageSize = (event) => {
+    setPackageSizeId(event.target.value);
+    setErrors((prev) => ({ ...prev, packageSize: false }));
+  };
+
+  const isValidEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+
+  const checkEmailAvailability = (email) => {
+    clearTimeout(emailCheckRef.current);
+    if (!isValidEmail(email)) {
+      setEmailStatus("idle");
+      return;
+    }
+    setEmailStatus("checking");
+    emailCheckRef.current = setTimeout(() => {
+      fetch(
+        `${API_URL}/api/shipment/clients/email-exists?email=${encodeURIComponent(
+          email
+        )}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+        .then((res) => res.json())
+        .then((data) => {
+          if (data.exists) {
+            setEmailStatus("taken");
+            setEmailTakenRole(data.role);
+          } else {
+            setEmailStatus("available");
+            setEmailTakenRole(null);
+          }
+        })
+        .catch((err) => {
+          console.error("Error verificando el correo:", err);
+          setEmailStatus("idle");
+          setEmailTakenRole(null);
+        });
+    }, 500);
+  };
+
+  const handleClientQueryChange = (event) => {
+    const value = event.target.value;
+    setClientQuery(value);
+    setClientId("");
+    setEmailStatus("idle");
+    setEmailTakenRole(null);
+    setErrors((prev) => ({ ...prev, client: false }));
+
+    const q = value.trim().toLowerCase();
+    if (!q) {
+      setClientSuggestions([]);
+      clearTimeout(emailCheckRef.current);
+      return;
+    }
+    const matches = clients.filter(
+      (c) =>
+        c.email.toLowerCase().includes(q) ||
+        `${c.firstName} ${c.lastName}`.toLowerCase().includes(q)
+    );
+    setClientSuggestions(matches);
+
+    // Solo consultamos al backend si el correo no coincide con ningún cliente
+    // ya cargado: ahí necesitamos saber si el correo pertenece a otra cuenta
+    // (empleado/admin) para no ofrecer registrarlo. Un correo, una cuenta.
+    if (matches.length === 0) {
+      checkEmailAvailability(value.trim());
+    } else {
+      clearTimeout(emailCheckRef.current);
+    }
+  };
+
+  const handleClientSelect = (client) => {
+    setClientId(client.id);
+    setClientQuery(client.email);
+    setClientSuggestions([]);
+    setEmailStatus("idle");
+    setEmailTakenRole(null);
+    setErrors((prev) => ({ ...prev, client: false }));
+  };
+
+  const openClientModal = () => {
+    setNewClient({
+      firstName: "",
+      lastName: "",
+      email: clientQuery.trim(),
+      password: "",
+    });
+    setNewClientErrors({
+      firstName: false,
+      lastName: false,
+      email: false,
+      password: false,
+    });
+    setClientCreateError("");
+    setClientSuggestions([]);
+    setShowClientModal(true);
+  };
+
+  const handleNewClientChange = (field) => (event) => {
+    setNewClient((prev) => ({ ...prev, [field]: event.target.value }));
+    setNewClientErrors((prev) => ({ ...prev, [field]: false }));
+    setClientCreateError("");
+  };
+
+  const handleCreateClient = async () => {
+    const firstName = newClient.firstName.trim();
+    const lastName = newClient.lastName.trim();
+    const email = newClient.email.trim();
+    const password = newClient.password;
+
+    const nameRegex = /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/;
+    const errs = {
+      firstName: false,
+      lastName: false,
+      email: false,
+      password: false,
+    };
+
+    if (!firstName) errs.firstName = "empty";
+    else if (firstName.length <= 3 || !nameRegex.test(firstName))
+      errs.firstName = "invalid";
+
+    if (!lastName) errs.lastName = "empty";
+    else if (lastName.length <= 3 || !nameRegex.test(lastName))
+      errs.lastName = "invalid";
+
+    if (!email) errs.email = "empty";
+    else if (!isValidEmail(email)) errs.email = "invalid";
+
+    const letters = (password.match(/[a-zA-Z]/g) || []).length;
+    const digits = (password.match(/[0-9]/g) || []).length;
+    if (!password) errs.password = "empty";
+    else if (letters < 3 || digits < 1) errs.password = "invalid";
+
+    if (errs.firstName || errs.lastName || errs.email || errs.password) {
+      setNewClientErrors(errs);
+      return;
+    }
+
+    try {
+      setCreatingClient(true);
+      setClientCreateError("");
+      const response = await fetch(`${API_URL}/api/shipment/clients`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ firstName, lastName, email, password }),
+      });
+
+      const data = await response.json();
+      if (!response.ok)
+        throw new Error(data.error || "No se pudo registrar el cliente.");
+
+      setClients((prev) => [...prev, data]);
+      setClientId(data.id);
+      setClientQuery(data.email);
+      setShowClientModal(false);
+      setNewClient({ firstName: "", lastName: "", email: "", password: "" });
+      setAlertData({
+        show: true,
+        message: `Cliente ${data.email} creado correctamente.`,
+        type: "success",
+      });
+    } catch (error) {
+      console.error("Error registrando cliente:", error);
+      setClientCreateError(error.message);
+    } finally {
+      setCreatingClient(false);
+    }
   };
 
   const handleOriginChange = (event) => {
@@ -103,7 +322,7 @@ const ShippingQuote = () => {
     if (value.trim()) {
       setErrors((prev) => ({ ...prev, origin: false }));
     }
-    fetchLocalities(value, "origin");
+    fetchAddresses(value, "origin");
   };
 
   const handleDestinationChange = (event) => {
@@ -112,26 +331,34 @@ const ShippingQuote = () => {
     if (value.trim()) {
       setErrors((prev) => ({ ...prev, destination: false }));
     }
-    fetchLocalities(value, "destination");
+    fetchAddresses(value, "destination");
   };
 
   const handleSuggestionSelect = (suggestion, type) => {
-    const fullName = `${suggestion.nombre}, ${suggestion.provincia}, Argentina`;
     if (type === "origin") {
-      setOrigin(fullName);
+      setOrigin(suggestion.displayName);
       setOriginSuggestions([]);
     } else {
-      setDestination(fullName);
+      setDestination(suggestion.displayName);
       setDestinationSuggestions([]);
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const token = localStorage.getItem("token");
 
     if (!shipmentTypeId) {
       setErrors((prev) => ({ ...prev, shipmentType: true }));
+      return;
+    }
+
+    if (!packageSizeId) {
+      setErrors((prev) => ({ ...prev, packageSize: true }));
+      return;
+    }
+
+    if (isStaff && !clientId) {
+      setErrors((prev) => ({ ...prev, client: true }));
       return;
     }
 
@@ -147,44 +374,124 @@ const ShippingQuote = () => {
       return;
     }
 
-    if (!token) {
+    // Todavía no se crea nada: se cotiza (id reservado + precio, sin guardar) y
+    // se abre el modal de confirmación. El envío se crea recién con "Continuar".
+    try {
+      setSubmitting(true);
+      const response = await fetch(`${API_URL}/api/shipment/quote`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          shipmentTypeId: Number(shipmentTypeId),
+          packageSizeId: Number(packageSizeId),
+          origin,
+          destination,
+          ...(isStaff ? { onBehalfOfClientId: clientId } : {}),
+        }),
+      });
+
+      const data = await response.json();
+      if (!response.ok)
+        throw new Error(data.error || "No se pudo cotizar el envío.");
+
+      setQuote(data);
+      setShowConfirmModal(true);
+    } catch (error) {
+      console.error("Error cotizando envío:", error);
       setAlertData({
         show: true,
-        message: "Debes iniciar sesión para cotizar un envío.",
+        message: "No se pudo generar la cotización.",
         type: "error",
       });
-      return;
+    } finally {
+      setSubmitting(false);
     }
+  };
 
+  const resetShipmentForm = () => {
+    setShipmentTypeId("");
+    setPackageSizeId("");
+    setClientId("");
+    setClientQuery("");
+    setClientSuggestions([]);
+    setEmailStatus("idle");
+    setEmailTakenRole(null);
+    setShowClientModal(false);
+    setOrigin("");
+    setDestination("");
+  };
+
+  // "Continuar": recién acá se crea (guarda) el envío, con el id ya cotizado.
+  const confirmCreateShipment = async () => {
     try {
+      setSubmitting(true);
       const response = await fetch(`${API_URL}/api/shipment`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ shipmentTypeId, origin, destination }),
+        body: JSON.stringify({
+          id: quote?.id,
+          shipmentTypeId: Number(shipmentTypeId),
+          packageSizeId: Number(packageSizeId),
+          origin,
+          destination,
+          ...(isStaff ? { onBehalfOfClientId: clientId } : {}),
+        }),
       });
 
       const data = await response.json();
       if (!response.ok)
-        throw new Error(data.error || "Error al generar la cotización");
+        throw new Error(data.error || "No se pudo crear el envío.");
 
-      setModalData(data.shipment);
-      setShowModal(true);
-
-      setShipmentTypeId("");
-      setOrigin("");
-      setDestination("");
-    } catch (error) {
-      console.error("Error creando envío:", error);
+      setShowConfirmModal(false);
+      setQuote(null);
       setAlertData({
         show: true,
-        message: "No se pudo generar la cotización.",
+        message: `¡Envío creado con éxito!`,
+        type: "success",
+      });
+      resetShipmentForm();
+    } catch (error) {
+      console.error("Error creando envío:", error);
+      setShowConfirmModal(false);
+      setQuote(null);
+      setAlertData({
+        show: true,
+        message: "No se pudo crear el envío.",
         type: "error",
       });
+    } finally {
+      setSubmitting(false);
     }
   };
+
+  // Cancelar la confirmación (cruz / clic afuera): no se crea el envío.
+  const cancelCreateShipment = () => {
+    setShowConfirmModal(false);
+    setQuote(null);
+    setAlertData({
+      show: true,
+      message: "Envío no creado.",
+      type: "error",
+    });
+  };
+
+  if (!token) {
+    return (
+      <div className="text-center mt-5">
+        <CustomAlert
+          show={true}
+          message="Debes iniciar sesión para acceder a esta sección."
+          type="error"
+        />
+      </div>
+    );
+  }
 
   return (
     <>
@@ -200,6 +507,8 @@ const ShippingQuote = () => {
             title="CREAR ENVÍO"
             buttonText="Crear"
             buttonType="submit"
+            loading={submitting}
+            loadingText="Cotizando..."
           >
             <Form.Group className="inputs-group mb-3 fw-bold">
               <Form.Label>
@@ -217,7 +526,7 @@ const ShippingQuote = () => {
                 </option>
                 {shipmentTypes.map((type) => (
                   <option key={type.id} value={type.id}>
-                    {type.name}
+                    {shipmentTypeLabels[type.name] || type.name}
                   </option>
                 ))}
               </Form.Select>
@@ -226,18 +535,103 @@ const ShippingQuote = () => {
                   Debe seleccionar un tipo de envío
                 </p>
               )}
-              {shipmentTypeId && (
-              <div className="titulo fw-bold mt-2">
-                {
-                  {
-                    Estandar: "El precio del envío estándar es de $25.000",
-                    Express: "El precio del envío express es de $40.000",
-                    Fragil: "El precio del envío frágil es de $60.000",
-                  }[shipmentTypes.find((t) => t.id === Number(shipmentTypeId))?.name]
-                }
-              </div>
-            )}
             </Form.Group>
+
+            <Form.Group className="inputs-group mb-3 fw-bold">
+              <Form.Label>
+                Tamaño del paquete: <span className="text-danger">*</span>
+              </Form.Label>
+              <Form.Select
+                className={`custom-input ${
+                  errors.packageSize ? "is-invalid" : ""
+                }`}
+                value={packageSizeId}
+                onChange={handlePackageSize}
+              >
+                <option value="" disabled hidden>
+                  Seleccione un tamaño
+                </option>
+                {packageSizes.map((size) => (
+                  <option key={size.id} value={size.id}>
+                    {packageSizeLabels[size.name] || size.name}
+                  </option>
+                ))}
+              </Form.Select>
+              {errors.packageSize && (
+                <p className="text-danger mt-1">
+                  Debe seleccionar un tamaño de paquete
+                </p>
+              )}
+            </Form.Group>
+
+            {isStaff && (
+              <Form.Group className="inputs-group mb-3 fw-bold position-relative">
+                <Form.Label>
+                  Cliente: <span className="text-danger">*</span>
+                </Form.Label>
+                <Form.Control
+                  className={`custom-input ${
+                    errors.client ? "is-invalid" : ""
+                  }`}
+                  type="text"
+                  placeholder="Escriba el correo del cliente"
+                  value={clientQuery}
+                  onChange={handleClientQueryChange}
+                  onKeyDown={(e) => e.key === "Enter" && e.preventDefault()}
+                  autoComplete="off"
+                />
+                {errors.client && (
+                  <p className="text-danger mt-1">
+                    Debe seleccionar o registrar un cliente
+                  </p>
+                )}
+
+                {clientSuggestions.length > 0 && !clientId && (
+                  <div className="w-100">
+                    <ul className="overflow-auto ocultar-scroll">
+                      {clientSuggestions.map((client) => (
+                        <li
+                          key={client.id}
+                          onClick={() => handleClientSelect(client)}
+                        >
+                          {client.firstName} {client.lastName} ({client.email})
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {clientQuery.trim() &&
+                  !clientId &&
+                  clientSuggestions.length === 0 && (
+                    <div className="mt-2">
+                      {emailStatus === "checking" && (
+                        <p className="titulo mt-1">Verificando correo...</p>
+                      )}
+                      {emailStatus === "taken" && (
+                        <p className="text-danger mt-1">
+                          Ese correo es de {roleLabels[emailTakenRole] || "otro usuario"}.
+                          No se pueden crear envíos con ese correo.
+                        </p>
+                      )}
+                      {emailStatus === "available" && (
+                        <>
+                          <p className="text-danger mt-1">
+                            No hay clientes con ese correo.
+                          </p>
+                          <button
+                            type="button"
+                            className="custom-button w-100"
+                            onClick={openClientModal}
+                          >
+                            Registrar nuevo cliente
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  )}
+              </Form.Group>
+            )}
 
             <Form.Group className="inputs-group mb-3 fw-bold position-relative">
               <Form.Label>
@@ -266,7 +660,7 @@ const ShippingQuote = () => {
                           handleSuggestionSelect(suggestion, "origin")
                         }
                       >
-                        {suggestion.nombre}, {suggestion.provincia}, Argentina
+                        {suggestion.displayName}
                       </li>
                     ))}
                   </ul>
@@ -274,7 +668,7 @@ const ShippingQuote = () => {
               )}
             </Form.Group>
 
-            <Form.Group className="inputs-group mb-3 fw-bold">
+            <Form.Group className="inputs-group mb-3 fw-bold position-relative">
               <Form.Label>
                 Destino: <span className="text-danger">*</span>
               </Form.Label>
@@ -287,6 +681,7 @@ const ShippingQuote = () => {
                 placeholder="Ej: Buenos Aires"
                 value={destination}
                 onChange={handleDestinationChange}
+                autoComplete="off"
               />
               {errors.destination && (
                 <p className="text-danger mt-1">Debe ingresar el destino</p>
@@ -301,7 +696,7 @@ const ShippingQuote = () => {
                           handleSuggestionSelect(suggestion, "destination")
                         }
                       >
-                        {suggestion.nombre}, {suggestion.provincia}, Argentina
+                        {suggestion.displayName}
                       </li>
                     ))}
                   </ul>
@@ -311,35 +706,167 @@ const ShippingQuote = () => {
           </CustomCard>
         </Form>
 
-        {modalData && (
-          <CustomModal
-            show={showModal}
-            onHide={() => {
-              setShowModal(false);
-              setAlertData({
-                show: true,
-                message: "¡Envío realizado con éxito!",
-                type: "success",
-              });
-            }}
-            title="¡Guarde su número de envío!"
-            body={
-              <div>
-                {[
-                  { label: "Envío N°: ", value: modalData.id },
-                  {
-                    label: "Precio: ",
-                    value: `$${modalData.price.toLocaleString("es-AR")}`,
-                  },
-                ].map((item, index) => (
-                  <div key={index}>
-                    {item.label} {item.value}
-                  </div>
-                ))}
-              </div>
-            }
-          />
-        )}
+        <CustomModal
+          show={showConfirmModal}
+          onHide={cancelCreateShipment}
+          onContinue={confirmCreateShipment}
+          title="¿Confirmar la creación del envío?"
+          body={
+            <div>
+              {[
+                { label: "Envío N°: ", value: quote?.id },
+                {
+                  label: "Precio: ",
+                  value:
+                    quote != null
+                      ? `$${quote.price.toLocaleString("es-AR")}`
+                      : "",
+                },
+                {
+                  label: "Tipo de envío: ",
+                  value:
+                    shipmentTypeLabels[
+                      shipmentTypes.find(
+                        (t) => t.id === Number(shipmentTypeId)
+                      )?.name
+                    ] || "",
+                },
+                {
+                  label: "Tamaño del paquete: ",
+                  value:
+                    packageSizeLabels[
+                      packageSizes.find(
+                        (s) => s.id === Number(packageSizeId)
+                      )?.name
+                    ] || "",
+                },
+                ...(isStaff ? [{ label: "Cliente: ", value: clientQuery }] : []),
+                { label: "Origen: ", value: origin },
+                { label: "Destino: ", value: destination },
+              ].map((item, index) => (
+                <div key={index}>
+                  <strong>{item.label}</strong>
+                  {item.value}
+                </div>
+              ))}
+            </div>
+          }
+        />
+
+        <CustomModal
+          show={showClientModal}
+          onHide={() => setShowClientModal(false)}
+          onContinue={handleCreateClient}
+          title="Registrar nuevo cliente"
+          body={
+            <div>
+              <Form.Group className="inputs-group mb-3 fw-bold">
+                <Form.Label>
+                  Nombre: <span className="text-danger">*</span>
+                </Form.Label>
+                <Form.Control
+                  className={`custom-input ${
+                    newClientErrors.firstName ? "is-invalid" : ""
+                  }`}
+                  type="text"
+                  placeholder="Ingrese el nombre"
+                  value={newClient.firstName}
+                  onChange={handleNewClientChange("firstName")}
+                  autoComplete="off"
+                />
+                {newClientErrors.firstName === "empty" && (
+                  <p className="text-danger mt-1">Debe ingresar un nombre</p>
+                )}
+                {newClientErrors.firstName === "invalid" && (
+                  <p className="text-danger mt-1">
+                    Debe ingresar un nombre válido (Solo letras, al menos 3)
+                  </p>
+                )}
+              </Form.Group>
+
+              <Form.Group className="inputs-group mb-3 fw-bold">
+                <Form.Label>
+                  Apellido: <span className="text-danger">*</span>
+                </Form.Label>
+                <Form.Control
+                  className={`custom-input ${
+                    newClientErrors.lastName ? "is-invalid" : ""
+                  }`}
+                  type="text"
+                  placeholder="Ingrese el apellido"
+                  value={newClient.lastName}
+                  onChange={handleNewClientChange("lastName")}
+                  autoComplete="off"
+                />
+                {newClientErrors.lastName === "empty" && (
+                  <p className="text-danger mt-1">Debe ingresar un apellido</p>
+                )}
+                {newClientErrors.lastName === "invalid" && (
+                  <p className="text-danger mt-1">
+                    Debe ingresar un apellido válido (Solo letras, al menos 3)
+                  </p>
+                )}
+              </Form.Group>
+
+              <Form.Group className="inputs-group mb-3 fw-bold">
+                <Form.Label>
+                  Correo Electrónico: <span className="text-danger">*</span>
+                </Form.Label>
+                <Form.Control
+                  className={`custom-input ${
+                    newClientErrors.email ? "is-invalid" : ""
+                  }`}
+                  type="email"
+                  placeholder="usuario@ejemplo.com"
+                  value={newClient.email}
+                  onChange={handleNewClientChange("email")}
+                  autoComplete="off"
+                />
+                {newClientErrors.email === "empty" && (
+                  <p className="text-danger mt-1">
+                    Debe ingresar un correo electrónico
+                  </p>
+                )}
+                {newClientErrors.email === "invalid" && (
+                  <p className="text-danger mt-1">
+                    Debe ingresar un email válido, ejemplo: juan@jemar.com
+                  </p>
+                )}
+              </Form.Group>
+
+              <Form.Group className="inputs-group mb-3 fw-bold">
+                <Form.Label>
+                  Contraseña: <span className="text-danger">*</span>
+                </Form.Label>
+                <Form.Control
+                  className={`custom-input ${
+                    newClientErrors.password ? "is-invalid" : ""
+                  }`}
+                  type="password"
+                  placeholder="Ingrese la contraseña"
+                  value={newClient.password}
+                  onChange={handleNewClientChange("password")}
+                  autoComplete="new-password"
+                />
+                {newClientErrors.password === "empty" && (
+                  <p className="text-danger mt-1">Debe ingresar una contraseña</p>
+                )}
+                {newClientErrors.password === "invalid" && (
+                  <p className="text-danger mt-1">
+                    La contraseña debe tener al menos 3 letras y 1 número
+                  </p>
+                )}
+              </Form.Group>
+
+              {clientCreateError && (
+                <p className="text-danger mt-1">{clientCreateError}</p>
+              )}
+              {creatingClient && (
+                <p className="titulo mt-1 mb-0">Registrando cliente...</p>
+              )}
+            </div>
+          }
+        />
       </div>
     </>
   );
