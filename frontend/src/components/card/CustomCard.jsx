@@ -11,10 +11,7 @@ const CustomCard = ({
 }) => {
   return (
     <Container className="d-flex justify-content-center">
-      <div
-        className="small-container d-flex flex-column"
-   
-      >
+      <div className="small-container d-flex flex-column">
         <div className="p-2">
           <h2 className="titulo fw-bold text-center mb-0">{title}</h2>
         </div>

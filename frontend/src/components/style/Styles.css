@@ -227,6 +227,37 @@ label,
   border-radius: 20px;
 }
 
+/*TrackLayout: card de consulta + tabla de envíos*/
+.track-layout {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+.track-layout .track-card {
+  flex: 0 0 auto;
+}
+
+/* Por defecto (mobile) la tabla ocupa toda la fila y cae debajo del card. */
+.track-layout .track-table {
+  flex: 1 1 100%;
+  min-width: 0;
+}
+
+/* En escritorio la tabla se ajusta al espacio restante y queda al lado del
+   card, sin envolver: así el contenido no supera el alto del viewport y la
+   imagen de fondo no se agranda. */
+@media (min-width: 769px) {
+  .track-layout {
+    flex-wrap: nowrap;
+  }
+
+  .track-layout .track-table {
+    flex: 1 1 0;
+  }
+}
+
 /*TableContainer*/
 .table-container{
   table-layout: fixed;
@@ -344,6 +375,37 @@ label,
 
 .container-modal .btn-close {
   background-color: #B07F11;
+}
+
+/* N° de envío en el encabezado del modal de confirmación:
+   el número va en su propia línea, debajo del "Envío N°:". */
+.modal-envio-id {
+  display: block;
+  margin-top: 0.25rem;
+  font-family: monospace;
+  font-size: 1.1rem;
+  letter-spacing: 1px;
+  word-break: break-all;
+}
+
+/* Precio destacado en el modal de confirmación del envío */
+.precio-destacado {
+  margin-top: 1rem;
+}
+
+.precio-destacado .precio-label {
+  display: block;
+  color: #B07F11;
+  font-weight: 700;
+}
+
+.precio-destacado .precio-monto {
+  display: block;
+  color: #B07F11;
+  font-weight: 700;
+  font-size: 2.25rem;
+  line-height: 1.2;
+  text-shadow: 0 0 10px #B07F11;
 }
 
 /* ===================================================================
