@@ -1,15 +1,28 @@
-import { useState, useContext, useRef } from "react";
+import { useState, useEffect, useContext } from "react";
 import { Form } from "react-bootstrap";
-import CustomCard from "../../card/CustomCard";
 import CustomAlert from "../../alert/CustomAlert";
+import CustomCard from "../../card/CustomCard";
 import CustomModal from "../../modal/CustomModal";
 import { AuthContext } from "../../authContext/AuthContext";
 import { API_URL } from "../../../api/config";
 
-const DeleteShipping = () => {
-  const { token } = useContext(AuthContext);
-  const [shipmentId, setShipmentId] = useState("");
-  const [errors, setErrors] = useState({ shipmentId: false });
+// El backend devuelve los nombres de enum en inglés; los mostramos en español.
+const typeLabels = { Express: "Expreso", Standard: "Estándar" };
+const sizeLabels = { Small: "Pequeño", Medium: "Mediano", Large: "Grande" };
+
+// Cancelado = 4 en Jemar.Domain.Enums.ShipmentStatusEnum. El backend valida
+// igual quién puede cancelar qué; acá solo filtramos para no hacer buscar a
+// ciegas envíos que de entrada no se van a poder cancelar.
+const CANCELLED_STATUS_ID = 4;
+
+function CancelShipment() {
+  const { token, role } = useContext(AuthContext);
+  const isStaff = role === "Employee" || role === "SuperAdmin";
+
+  const [shipments, setShipments] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState("");
+  const [showTable, setShowTable] = useState(false);
   const [alertData, setAlertData] = useState({
     show: false,
     message: "",
@@ -17,189 +30,271 @@ const DeleteShipping = () => {
   });
 
   const [showModal, setShowModal] = useState(false);
+  const [target, setTarget] = useState(null);
+  const [cancelling, setCancelling] = useState(false);
 
-  const shipmentRef = useRef(null);
+  const loadShipments = () => {
+    if (!token) return;
+    setLoading(true);
+    fetch(`${API_URL}/api/shipment`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => res.json())
+      .then((data) => setShipments(Array.isArray(data) ? data : []))
+      .catch((err) => {
+        console.error("Error cargando envíos:", err);
+        setAlertData({
+          show: true,
+          message: "No se pudieron cargar los envíos.",
+          type: "error",
+        });
+      })
+      .finally(() => setLoading(false));
+  };
 
-  const validateIdShipment = (idShipment) => /^[1-9]\d*$/.test(idShipment);
+  useEffect(loadShipments, [token]);
 
-  const handleCancelNumber = (event) => {
-    const idShipment = event.target.value;
-    setShipmentId(idShipment);
+  // Un cliente solo puede cancelar envíos propios y Pendientes; al staff
+  // además se le muestran los En tránsito (el backend igual valida todo esto).
+  const cancellable = shipments.filter(
+    (s) =>
+      s.shipmentStatus === "Pending" ||
+      (isStaff && s.shipmentStatus === "InTransit")
+  );
 
-    if (!idShipment.trim()) {
-      setErrors({ shipmentId: "empty" });
-    } else if (!validateIdShipment(idShipment)) {
-      setErrors({ shipmentId: "invalid" });
+  const openConfirm = (shipment) => {
+    setTarget(shipment);
+    setShowModal(true);
+  };
+
+  const handleSearch = (event) => {
+    event.preventDefault();
+    const q = search.trim().toLowerCase();
+
+    if (!q) {
+      setAlertData({
+        show: true,
+        message: "Ingresá un número de envío.",
+        type: "error",
+      });
+      return;
+    }
+
+    const matches = cancellable.filter((s) => s.id.toLowerCase().includes(q));
+
+    if (matches.length === 0) {
+      setAlertData({
+        show: true,
+        message: "No se encontró un envío cancelable con ese número.",
+        type: "error",
+      });
+    } else if (matches.length === 1) {
+      openConfirm(matches[0]);
     } else {
-      setErrors({ shipmentId: false });
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    if (!shipmentId.trim()) {
-      setErrors({ shipmentId: "empty" });
-      shipmentRef.current.focus();
-      return;
-    }
-
-    if (!validateIdShipment(shipmentId)) {
-      setErrors({ shipmentId: "invalid" });
-      shipmentRef.current.focus();
-      return;
-    }
-
-    if (!token) {
       setAlertData({
         show: true,
-        message: "Debes ingresar para cancelar envíos.",
-        type: "error",
-      });
-      return;
-    }
-    try {
-      const response = await fetch(
-        `${API_URL}/api/shipment/${shipmentId}`,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        let message = data.error;
-        if (data.error === "No tenés permiso para ver este envío") {
-          message = "No tenés permiso para cancelar este envío";
-        }
-        setAlertData({
-          show: true,
-          message,
-          type: "error",
-        });
-        return;
-      }
-      setShowModal(true);
-    } catch (error) {
-      setAlertData({
-        show: true,
-        message: "Error al verificar el envío.",
-        type: "error",
+        message:
+          "Hay varios envíos que coinciden. Ingresá el número completo.",
+        type: "info",
       });
     }
   };
 
-  const cancelShipment = async () => {
+  // Nota: hasta que el modal soporte estado de carga con spinner, este chequeo
+  // evita que un doble clic dispare dos cancelaciones del mismo envío.
+  const confirmCancel = async () => {
+    if (!target || cancelling) return;
+
     try {
+      setCancelling(true);
       const response = await fetch(
-        `${API_URL}/api/shipment/${shipmentId}`,
+        `${API_URL}/api/shipment/${target.id}/status`,
         {
-          method: "DELETE",
+          method: "PUT",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({
-            status: "Cancelado",
-          }),
+          body: JSON.stringify({ shipmentStatusId: CANCELLED_STATUS_ID }),
         }
       );
 
-      const data = await response.json();
-
       if (!response.ok) {
-        setAlertData({
-          show: true,
-          message: data.error,
-          type: "error",
-        });
-      } else {
-        setAlertData({
-          show: true,
-          message: data.message,
-          type: "success",
-        });
-        setShipmentId("");
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || "No se pudo cancelar el envío.");
       }
 
       setShowModal(false);
+      setTarget(null);
+      setSearch("");
+      setAlertData({
+        show: true,
+        message: "¡Envío cancelado con éxito!",
+        type: "success",
+      });
+      loadShipments();
     } catch (error) {
-      console.error("Error al cancelar el envío:", error);
+      console.error("Error cancelando envío:", error);
+      setShowModal(false);
       setAlertData({
         show: true,
         message: error.message,
         type: "error",
       });
-      setShowModal(false);
+    } finally {
+      setCancelling(false);
     }
   };
 
-  return (
-    <>
-      <div className="color-bacground d-flex justify-content-center align-items-center flex-column">
-        <CustomAlert
-          show={alertData.show}
-          message={alertData.message}
-          type={alertData.type}
-          onClose={() => setAlertData({ ...alertData, show: false })}
-        />
+  const cancelConfirmModal = () => {
+    setShowModal(false);
+    setTarget(null);
+  };
 
-        <Form noValidate onSubmit={handleSubmit}>
-          <CustomCard
-            title="CANCELAR ENVÍO"
-            buttonText="Cancelar"
-            buttonType="submit"
-          >
-            <Form.Group className="inputs-group mb-3 fw-bold">
-              <Form.Label>
-                Número de envío: <span className="text-danger">*</span>
-              </Form.Label>
-              <Form.Control
-                ref={shipmentRef}
-                className={`custom-input ${
-                  errors.shipmentId ? "is-invalid" : ""
-                }`}
-                type="text"
-                placeholder="Ej: 1"
-                value={shipmentId}
-                onChange={handleCancelNumber}
-              />
-              {errors.shipmentId === "empty" && (
-                <p className="text-danger mt-1">
-                  Debe ingresar el número de envío
-                </p>
-              )}
-              {errors.shipmentId === "invalid" && (
-                <p className="text-danger mt-1">
-                  Debe ingresar un número válido (mayor a 0)
-                </p>
-              )}
-            </Form.Group>
-          </CustomCard>
-        </Form>
-        <CustomModal
-          show={showModal}
-          onHide={() => {
-            setShowModal(false);
-            setAlertData({
-              show: true,
-              message: "¡Envío cancelado con éxito!",
-              type: "success",
-            });
-          }}
-          title="Confirmar cancelación"
-          body={`¿Estás seguro que deseas cancelar el envío número ${shipmentId}?`}
-          onContinue={cancelShipment}
-          confirmText="Confirmar"
-          cancelText="Cancelar"
+  if (!token) {
+    return (
+      <div className="text-center mt-5">
+        <CustomAlert
+          show={true}
+          message="Debes iniciar sesión para cancelar envíos."
+          type="error"
         />
       </div>
+    );
+  }
+
+  return (
+    <>
+      <CustomAlert
+        show={alertData.show}
+        message={alertData.message}
+        type={alertData.type}
+        onClose={() => setAlertData({ ...alertData, show: false })}
+      />
+
+      <div
+        className="track-layout"
+        style={showTable ? { width: "min(1050px, 88vw)" } : undefined}
+      >
+        <div className="d-flex flex-column align-items-center track-card">
+          <Form noValidate onSubmit={handleSearch}>
+            <CustomCard
+              title="CANCELAR ENVÍO"
+              buttonText="Cancelar"
+              buttonType="submit"
+            >
+              <Form.Group className="inputs-group mb-3 fw-bold">
+                <Form.Label>Número de envío:</Form.Label>
+                <Form.Control
+                  className="custom-input"
+                  type="text"
+                  placeholder="Buscá por número"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  autoComplete="off"
+                />
+              </Form.Group>
+              <p className="text-center mt-2 mb-0">
+                <span
+                  className="custom-link"
+                  style={{ cursor: "pointer" }}
+                  onClick={() => setShowTable((prev) => !prev)}
+                >
+                  {showTable
+                    ? "Ocultar envíos cancelables"
+                    : "Ver envíos cancelables"}
+                </span>
+              </p>
+            </CustomCard>
+          </Form>
+        </div>
+
+        {showTable && (
+          <div className="track-table">
+            <div className="back-table ocultar-scroll text-center p-3">
+              <h2 className="title-card mb-3">Envíos cancelables</h2>
+
+              {loading ? (
+                <p className="titulo fw-bold">Cargando envíos...</p>
+              ) : cancellable.length > 0 ? (
+                <div style={{ overflowX: "auto" }}>
+                  <table className="table-container">
+                    <thead>
+                      <tr>
+                        <th>N°</th>
+                        {isStaff && <th>Cliente</th>}
+                        <th>Estado</th>
+                        <th>Destino</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {cancellable.map((s) => (
+                        <tr key={s.id} onClick={() => openConfirm(s)}>
+                          <td>{s.id}</td>
+                          {isStaff && <td>{s.clientName}</td>}
+                          <td>
+                            {s.shipmentStatus === "InTransit"
+                              ? "En tránsito"
+                              : "Pendiente"}
+                          </td>
+                          <td>{s.destination}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <h2 className="title-card">
+                  {isStaff
+                    ? "No hay envíos cancelables."
+                    : "No tenés envíos pendientes para cancelar."}
+                </h2>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {target && (
+        <CustomModal
+          show={showModal}
+          onHide={cancelConfirmModal}
+          onContinue={confirmCancel}
+          continueText={cancelling ? "Cancelando..." : "Confirmar cancelación"}
+          title="¿Confirmar la cancelación del envío?"
+          body={
+            <div>
+              {[
+                { label: "Envío N°: ", value: target.id },
+                {
+                  label: "Tipo de envío: ",
+                  value: typeLabels[target.shipmentType] || target.shipmentType,
+                },
+                {
+                  label: "Tamaño del paquete: ",
+                  value: sizeLabels[target.packageSize] || target.packageSize,
+                },
+                ...(isStaff
+                  ? [{ label: "Cliente: ", value: target.clientName }]
+                  : []),
+                { label: "Origen: ", value: target.origin },
+                { label: "Destino: ", value: target.destination },
+                {
+                  label: "Precio: ",
+                  value: `$${target.price.toLocaleString("es-AR")}`,
+                },
+              ].map((item, i) => (
+                <div key={i}>
+                  <strong>{item.label}</strong>
+                  {item.value}
+                </div>
+              ))}
+            </div>
+          }
+        />
+      )}
     </>
   );
-};
+}
 
-export default DeleteShipping;
+export default CancelShipment;
