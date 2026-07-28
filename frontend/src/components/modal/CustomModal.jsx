@@ -7,6 +7,7 @@ const CustomModal = ({
   body,
   onContinue,
   continueText = "Continuar",
+  continueDisabled = false,
 }) => {
   return (
     <Modal className="container-modal" show={show} onHide={onHide} centered>
@@ -17,7 +18,11 @@ const CustomModal = ({
       <Modal.Body className="sub-titulo">{body}</Modal.Body>
 
       <Modal.Footer>
-        <Button onClick={onContinue || onHide} className="custom-button">
+        <Button
+          onClick={onContinue || onHide}
+          className="custom-button"
+          disabled={continueDisabled}
+        >
           {continueText}
         </Button>
       </Modal.Footer>
