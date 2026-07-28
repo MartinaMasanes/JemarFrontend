@@ -9,6 +9,7 @@ import Background from "../background/Background";
 import BackArrow from "../back/BackArrow";
 import CustomCard from "../card/CustomCard";
 import CustomAlert from "../alert/CustomAlert";
+import CustomModal from "../modal/CustomModal";
 
 import "../style/Styles.css";
 
@@ -133,7 +134,7 @@ const UserRegister = () => {
       if (!response.ok) {
         setAlertData({
           show: true,
-          message: data.message || "Error en el registro",
+          message: data.error || "Error en el registro",
           type: "error",
         });
         return;
@@ -163,6 +164,7 @@ const UserRegister = () => {
 
   const handleVerify = async (event) => {
     event.preventDefault();
+    if (loading) return;
 
     if (!code.trim()) {
       setCodeError(true);
@@ -229,8 +231,7 @@ const UserRegister = () => {
             type={alertData.type}
             onClose={() => setAlertData({ ...alertData, show: false })}
           />
-          {step === "form" ? (
-            <Form noValidate onSubmit={handleSubmit}>
+          <Form noValidate onSubmit={handleSubmit}>
               <CustomCard
                 title="REGISTRATE"
                 buttonText="Continuar"
@@ -352,16 +353,17 @@ const UserRegister = () => {
                   )}
                 </Form.Group>
               </CustomCard>
-            </Form>
-          ) : (
-            <Form noValidate onSubmit={handleVerify}>
-              <CustomCard
-                title="VERIFICÁ TU EMAIL"
-                buttonText="Verificar"
-                buttonType="submit"
-                loading={loading}
-                loadingText="Verificando..."
-              >
+          </Form>
+
+          <CustomModal
+            show={step === "verify"}
+            onHide={() => setStep("form")}
+            onContinue={handleVerify}
+            continueText={loading ? "Verificando..." : "Verificar"}
+            continueDisabled={loading}
+            title="VERIFICÁ TU EMAIL"
+            body={
+              <Form noValidate onSubmit={handleVerify}>
                 <p className="text-center mb-3">
                   Ingresá el código que enviamos a <strong>{email}</strong>.
                 </p>
@@ -388,9 +390,9 @@ const UserRegister = () => {
                     </p>
                   )}
                 </Form.Group>
-              </CustomCard>
-            </Form>
-          )}
+              </Form>
+            }
+          />
         </div>
       </Background>
     </>
