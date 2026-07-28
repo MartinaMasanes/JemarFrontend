@@ -48,7 +48,7 @@ const visibleButtons = buttons.filter((btn) =>
           </div>
           <Row className="button-bar mt-auto mb-3">
             {visibleButtons.map((btn) => (
-              <Col xs="auto" key={btn.key}>
+              <Col xs={6} sm="auto" key={btn.key}>
                 <Button
                   className={`border-0 fs-5 mx-4 Button-acction ${activeComponent === btn.key ? "active" : ""
                     }`}
