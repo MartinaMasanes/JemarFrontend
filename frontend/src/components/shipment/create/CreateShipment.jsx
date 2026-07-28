@@ -710,18 +710,16 @@ const ShippingQuote = () => {
           show={showConfirmModal}
           onHide={cancelCreateShipment}
           onContinue={confirmCreateShipment}
-          title="¿Confirmar la creación del envío?"
+          continueText="Confirmar envío"
+          title={
+            <span>
+              Envío N°:
+              <span className="modal-envio-id">{quote?.id}</span>
+            </span>
+          }
           body={
             <div>
               {[
-                { label: "Envío N°: ", value: quote?.id },
-                {
-                  label: "Precio: ",
-                  value:
-                    quote != null
-                      ? `$${quote.price.toLocaleString("es-AR")}`
-                      : "",
-                },
                 {
                   label: "Tipo de envío: ",
                   value:
@@ -749,6 +747,15 @@ const ShippingQuote = () => {
                   {item.value}
                 </div>
               ))}
+
+              {quote != null && (
+                <div className="precio-destacado text-center">
+                  <span className="precio-label">Precio</span>
+                  <span className="precio-monto">
+                    ${quote.price.toLocaleString("es-AR")}
+                  </span>
+                </div>
+              )}
             </div>
           }
         />

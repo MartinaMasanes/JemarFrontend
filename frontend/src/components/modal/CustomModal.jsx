@@ -1,6 +1,13 @@
 import { Modal, Button } from "react-bootstrap";
 
-const CustomModal = ({ show, onHide, title, body, onContinue }) => {
+const CustomModal = ({
+  show,
+  onHide,
+  title,
+  body,
+  onContinue,
+  continueText = "Continuar",
+}) => {
   return (
     <Modal className="container-modal" show={show} onHide={onHide} centered>
       <Modal.Header closeButton className="titulo">
@@ -11,7 +18,7 @@ const CustomModal = ({ show, onHide, title, body, onContinue }) => {
 
       <Modal.Footer>
         <Button onClick={onContinue || onHide} className="custom-button">
-          Continuar
+          {continueText}
         </Button>
       </Modal.Footer>
     </Modal>
