@@ -112,10 +112,14 @@ const Login = () => {
     setLoading(true);
 
     try {
+      // Si este navegador ya verificó 2FA antes (y no venció), lo mandamos
+      // para que el backend salte el paso del código.
+      const deviceToken = localStorage.getItem("deviceToken");
+
       const response = await fetch(`${API_URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email, password, deviceToken }),
       });
 
       const data = await response.json();
@@ -185,6 +189,12 @@ const Login = () => {
           type: "error",
         });
         return;
+      }
+
+      // El backend nos da un token de dispositivo nuevo: lo guardamos para
+      // no tener que pedir 2FA de nuevo desde este navegador.
+      if (data.deviceToken) {
+        localStorage.setItem("deviceToken", data.deviceToken);
       }
 
       completeLogin(data.token);

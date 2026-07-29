@@ -193,6 +193,12 @@ const UserRegister = () => {
         return;
       }
 
+      // Este navegador ya probó tener acceso al email: lo guardamos como de
+      // confianza para no pedir 2FA de nuevo en el primer login.
+      if (data.deviceToken) {
+        localStorage.setItem("deviceToken", data.deviceToken);
+      }
+
       setAlertData({
         show: true,
         message: "¡Email verificado! Ya podés iniciar sesión.",
