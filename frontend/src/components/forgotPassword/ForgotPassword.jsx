@@ -54,6 +54,15 @@ const ForgotPassword = () => {
         body: JSON.stringify({ email: email.trim() }),
       });
 
+      if (response.status === 429) {
+        setAlertData({
+          show: true,
+          message: "Demasiados intentos. Esperá un minuto y volvé a intentar.",
+          type: "error",
+        });
+        return false;
+      }
+
       const data = await response.json();
 
       if (!response.ok) {
@@ -157,6 +166,15 @@ const ForgotPassword = () => {
           newPassword: newPassword.trim(),
         }),
       });
+
+      if (response.status === 429) {
+        setAlertData({
+          show: true,
+          message: "Demasiados intentos. Esperá un minuto y volvé a intentar.",
+          type: "error",
+        });
+        return;
+      }
 
       const data = await response.json();
 
