@@ -6,6 +6,7 @@ import ErrorNotAllowed from "./components/error/errorNotAllowed/errorNotAllowed"
 import Header from "./components/header/Header";
 import HomePage from "./components/home/HomePage";
 import Login from "./components/login/Login";
+import ForgotPassword from "./components/forgotPassword/ForgotPassword";
 import UserRegister from "./components/register/UserRegister";
 import Shipments from "./components/shipment/Shipments";
 import Modify from "./components/modify/Modify";
@@ -31,6 +32,7 @@ function App() {
         <Route element={<MainLayout />}>
           <Route path="/" element={<HomePage />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/register" element={<UserRegister />} />
           <Route path="/contact" element={<ContactForm />} />
 

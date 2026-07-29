@@ -286,7 +286,18 @@ const Login = () => {
                 )}
                   </Form.Group>
 
-                  <div className="inputs-group mt-3 text-center">
+                  <div className="inputs-group text-center">
+                    <Form.Label>
+                      <Link
+                        to="/forgot-password"
+                        className="text-decoration-none custom-link"
+                      >
+                        ¿Olvidaste tu contraseña?
+                      </Link>
+                    </Form.Label>
+                  </div>
+
+                  <div className="inputs-group mt-1 text-center">
                     <Form.Label>
                       No tengo cuenta -{" "}
                       <Link

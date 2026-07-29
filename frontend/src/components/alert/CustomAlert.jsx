@@ -18,7 +18,7 @@ const CustomAlert = ({ show, onClose, message, type = "info", duration = 5000 })
         ? "#b01b17"
         : type === "warning"
           ? "#dcae1d"
-          : "#056da2";
+          : "#B07F11";
 
   return (
     <>

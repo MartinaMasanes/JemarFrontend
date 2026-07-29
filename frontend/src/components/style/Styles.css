@@ -335,11 +335,15 @@ label,
 }
 
 /*CustomAlert */
+/* z-index por encima del Modal de Bootstrap (backdrop 1050, dialog 1055):
+   sin esto, un alert disparado mientras hay un modal abierto (ej. código
+   incorrecto al restablecer contraseña o al verificar el email) queda tapado
+   y el usuario nunca lo ve. */
 .custom-alert-overlay {
   position: fixed;
   top: 0; left: 0; right: 0; bottom: 0;
   background-color: rgba(0, 0, 0, 0.6);
-  z-index: 1050;
+  z-index: 1060;
 }
 
 .custom-alert-container {
