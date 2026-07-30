@@ -3,13 +3,12 @@ import { Form } from "react-bootstrap";
 
 import { initialErrors } from "./CreateShipment.data";
 import { AuthContext } from "../../authContext/AuthContext";
-import { API_URL } from "../../../api/config";
+import { apiFetch } from "../../../api/httpClient";
 
 import CustomModal from "../../modal/CustomModal";
 import CustomCard from "../../card/CustomCard";
 import CustomAlert from "../../alert/CustomAlert";
 
-// El backend devuelve los nombres del enum en inglés; los mostramos en español.
 const shipmentTypeLabels = {
   Express: "Expreso",
   Standard: "Estándar",
@@ -54,11 +53,7 @@ const ShippingQuote = () => {
   });
   const [clientCreateError, setClientCreateError] = useState("");
   const [creatingClient, setCreatingClient] = useState(false);
-  // Estado del correo tipeado cuando no coincide con ningún cliente cargado:
-  // "idle" | "checking" | "available" (no existe, se puede registrar) | "taken"
-  // (ya existe una cuenta con ese correo, sea del rol que sea).
   const [emailStatus, setEmailStatus] = useState("idle");
-  // Rol de la cuenta dueña del correo cuando ya existe (para avisar al empleado).
   const [emailTakenRole, setEmailTakenRole] = useState(null);
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
@@ -72,7 +67,6 @@ const ShippingQuote = () => {
   });
 
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-  // Cotización devuelta por el backend (id reservado + precio) sin crear el envío.
   const [quote, setQuote] = useState(null);
   const [originSuggestions, setOriginSuggestions] = useState([]);
   const [destinationSuggestions, setDestinationSuggestions] = useState([]);
@@ -85,14 +79,12 @@ const ShippingQuote = () => {
   useEffect(() => {
     if (!token) return;
 
-    const authHeaders = { Authorization: `Bearer ${token}` };
-
-    fetch(`${API_URL}/api/shipment/types`, { headers: authHeaders })
+    apiFetch("/api/shipment/types")
       .then((res) => res.json())
       .then((data) => setShipmentTypes(data))
       .catch((err) => console.error("Error cargando tipos de envío:", err));
 
-    fetch(`${API_URL}/api/shipment/package-sizes`, { headers: authHeaders })
+    apiFetch("/api/shipment/package-sizes")
       .then((res) => res.json())
       .then((data) => setPackageSizes(data))
       .catch((err) =>
@@ -100,7 +92,7 @@ const ShippingQuote = () => {
       );
 
     if (isStaff) {
-      fetch(`${API_URL}/api/shipment/clients`, { headers: authHeaders })
+      apiFetch("/api/shipment/clients")
         .then((res) => res.json())
         .then((data) => setClients(data))
         .catch((err) => console.error("Error cargando clientes:", err));
@@ -119,9 +111,8 @@ const ShippingQuote = () => {
         return;
       }
 
-      fetch(
-        `${API_URL}/api/shipment/address-search?q=${encodeURIComponent(query)}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+      apiFetch(
+        `/api/shipment/address-search?q=${encodeURIComponent(query)}`
       )
         .then((res) => res.json())
         .then((data) => {
@@ -159,11 +150,10 @@ const ShippingQuote = () => {
     }
     setEmailStatus("checking");
     emailCheckRef.current = setTimeout(() => {
-      fetch(
-        `${API_URL}/api/shipment/clients/email-exists?email=${encodeURIComponent(
+      apiFetch(
+        `/api/shipment/clients/email-exists?email=${encodeURIComponent(
           email
-        )}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        )}`
       )
         .then((res) => res.json())
         .then((data) => {
@@ -204,9 +194,6 @@ const ShippingQuote = () => {
     );
     setClientSuggestions(matches);
 
-    // Solo consultamos al backend si el correo no coincide con ningún cliente
-    // ya cargado: ahí necesitamos saber si el correo pertenece a otra cuenta
-    // (empleado/admin) para no ofrecer registrarlo. Un correo, una cuenta.
     if (matches.length === 0) {
       checkEmailAvailability(value.trim());
     } else {
@@ -285,12 +272,9 @@ const ShippingQuote = () => {
     try {
       setCreatingClient(true);
       setClientCreateError("");
-      const response = await fetch(`${API_URL}/api/shipment/clients`, {
+      const response = await apiFetch("/api/shipment/clients", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ firstName, lastName, email, password }),
       });
 
@@ -374,16 +358,11 @@ const ShippingQuote = () => {
       return;
     }
 
-    // Todavía no se crea nada: se cotiza (id reservado + precio, sin guardar) y
-    // se abre el modal de confirmación. El envío se crea recién con "Continuar".
     try {
       setSubmitting(true);
-      const response = await fetch(`${API_URL}/api/shipment/quote`, {
+      const response = await apiFetch("/api/shipment/quote", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           shipmentTypeId: Number(shipmentTypeId),
           packageSizeId: Number(packageSizeId),
@@ -424,16 +403,12 @@ const ShippingQuote = () => {
     setDestination("");
   };
 
-  // "Continuar": recién acá se crea (guarda) el envío, con el id ya cotizado.
   const confirmCreateShipment = async () => {
     try {
       setSubmitting(true);
-      const response = await fetch(`${API_URL}/api/shipment`, {
+      const response = await apiFetch("/api/shipment", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           id: quote?.id,
           shipmentTypeId: Number(shipmentTypeId),
@@ -470,7 +445,6 @@ const ShippingQuote = () => {
     }
   };
 
-  // Cancelar la confirmación (cruz / clic afuera): no se crea el envío.
   const cancelCreateShipment = () => {
     setShowConfirmModal(false);
     setQuote(null);

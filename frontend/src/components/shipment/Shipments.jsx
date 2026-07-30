@@ -9,9 +9,6 @@ import CreateShipment from "./create/CreateShipment";
 import CancelShipment from "./cancel/CancelShipment";
 import TrackShipment from "./track/TrackShipment";
 
-// "Cancelar envío" es autogestión del cliente sobre su propio envío pendiente.
-// Empleado/SuperAdmin ya tienen "Modificar estado" (en /modify), que cubre lo
-// mismo y más (pueden dejarlo en cualquier estado, no solo Cancelado).
 const buttonsByRole = {
   Client: ["create", "cancel", "track"],
   Employee: ["create", "track"],

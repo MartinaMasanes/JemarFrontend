@@ -2,13 +2,12 @@ import { useState, useEffect, useContext } from "react";
 import { Form } from "react-bootstrap";
 
 import { AuthContext } from "../../authContext/AuthContext";
-import { API_URL } from "../../../api/config";
+import { apiFetch } from "../../../api/httpClient";
 
 import CustomCard from "../../card/CustomCard";
 import CustomAlert from "../../alert/CustomAlert";
 import CustomModal from "../../modal/CustomModal";
 
-// El backend devuelve los nombres de enum en inglés; los mostramos en español.
 const typeLabels = { Express: "Expreso", Standard: "Estándar" };
 const sizeLabels = { Small: "Pequeño", Medium: "Mediano", Large: "Grande" };
 const statusLabels = {
@@ -18,9 +17,6 @@ const statusLabels = {
   Cancelled: "Cancelado",
 };
 
-// Transiciones válidas según la máquina de estados del backend (los IDs son
-// los de Jemar.Domain.Enums.ShipmentStatusEnum). El backend valida igual; acá
-// solo evitamos ofrecer opciones que de entrada van a ser rechazadas.
 const nextStatusOptions = {
   Pending: [
     { id: 2, label: "En tránsito" },
@@ -57,9 +53,7 @@ function ModifyState() {
   const loadShipments = () => {
     if (!token) return;
     setLoading(true);
-    fetch(`${API_URL}/api/shipment`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    apiFetch("/api/shipment")
       .then((res) => res.json())
       .then((data) => setShipments(Array.isArray(data) ? data : []))
       .catch((err) => {
@@ -75,7 +69,6 @@ function ModifyState() {
 
   useEffect(loadShipments, [token]);
 
-  // Solo tiene sentido ofrecer los envíos que todavía admiten alguna transición.
   const modifiable = shipments.filter(
     (s) => (nextStatusOptions[s.shipmentStatus] || []).length > 0
   );
@@ -123,21 +116,16 @@ function ModifyState() {
     }
   };
 
-  // Nota: hasta que el modal soporte estado de carga con spinner, este chequeo
-  // evita que un doble clic dispare dos modificaciones del mismo envío.
   const confirmChange = async () => {
     if (!selected || !newStatusId || submitting) return;
 
     try {
       setSubmitting(true);
-      const response = await fetch(
-        `${API_URL}/api/shipment/${selected.id}/status`,
+      const response = await apiFetch(
+        `/api/shipment/${selected.id}/status`,
         {
           method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ shipmentStatusId: Number(newStatusId) }),
         }
       );
@@ -147,9 +135,7 @@ function ModifyState() {
         throw new Error(data.error || "No se pudo modificar el estado.");
       }
 
-      const getResponse = await fetch(`${API_URL}/api/shipment/${selected.id}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const getResponse = await apiFetch(`/api/shipment/${selected.id}`);
       const updated = await getResponse.json();
 
       setSelected(null);

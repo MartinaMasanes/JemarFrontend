@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 
 import { AuthContext } from "./AuthContext";
 import { IsTokenValid } from "../protected/Protected.helpers";
+import { API_URL } from "../../api/config";
 
 const decodeJWT = (token) => {
   try {
@@ -45,7 +46,16 @@ const AuthContextProvider = ({ children }) => {
     localStorage.setItem("role", role);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await fetch(`${API_URL}/api/auth/logout`, {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+
     setToken(null);
     setRole(null);
     localStorage.removeItem("token");

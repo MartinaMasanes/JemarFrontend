@@ -17,7 +17,6 @@ const ForgotPassword = () => {
   const [email, setEmail] = useState("");
   const [errors, setErrors] = useState(initialErrors);
 
-  // Paso del flujo: "request" (pedir el código) o "reset" (código + nueva contraseña).
   const [step, setStep] = useState("request");
   const [code, setCode] = useState("");
   const [newPassword, setNewPassword] = useState("");

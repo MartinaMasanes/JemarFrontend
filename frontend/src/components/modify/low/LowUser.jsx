@@ -3,7 +3,7 @@ import { Form } from "react-bootstrap";
 
 import { initialErrors } from "./LowUser.data";
 import { AuthContext } from "../../authContext/AuthContext";
-import { API_URL } from "../../../api/config";
+import { apiFetch } from "../../../api/httpClient";
 
 import CustomCard from "../../card/CustomCard";
 import CustomAlert from "../../alert/CustomAlert";
@@ -63,12 +63,7 @@ const LowUser = () => {
     }
 
     try {
-      const response = await fetch(
-        `${API_URL}/api/user/${email}`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+      const response = await apiFetch(`/api/user/${email}`);
 
       const data = await response.json();
 
@@ -94,11 +89,8 @@ const LowUser = () => {
 
   const Delete = async () => {
     try {
-      const response = await fetch(`${API_URL}/api/user/${email}`, {
+      const response = await apiFetch(`/api/user/${email}`, {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
       });
 
       if (!response.ok) {
@@ -107,7 +99,6 @@ const LowUser = () => {
           const data = await response.json();
           message = data.error || message;
         } catch {
-          // Respuestas sin body JSON: usamos el mensaje por defecto
         }
         setAlertData({
           show: true,

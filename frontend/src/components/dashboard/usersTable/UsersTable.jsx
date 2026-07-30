@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
 import { Container } from "react-bootstrap";
-import { API_URL } from "../../../api/config";
+import { apiFetch } from "../../../api/httpClient";
 
 const UsersTable = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [alertData, setAlertData] = useState({ show: false, message: "", type: "" });
-  const [filterStatus, setFilterStatus] = useState(""); // <-- estado del filtro
+  const [filterStatus, setFilterStatus] = useState("");
 
   const fetchUsers = async () => {
     const token = localStorage.getItem("token");
@@ -18,9 +18,7 @@ const UsersTable = () => {
 
     try {
       setLoading(true);
-      const response = await fetch(`${API_URL}/api/user`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await apiFetch("/api/user");
 
       const data = await response.json();
 
@@ -40,7 +38,6 @@ const UsersTable = () => {
     fetchUsers();
   }, []);
 
-  // Filtrar usuarios según el estado
   const filteredUsers = filterStatus
     ? users.filter(user => (filterStatus === "habilitado" ? user.isActive : !user.isActive))
     : users;

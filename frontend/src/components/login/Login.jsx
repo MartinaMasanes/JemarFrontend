@@ -20,12 +20,10 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState(initialErrors);
 
-  // Paso del flujo: "credentials" (email + password) o "twofactor" (código).
   const [step, setStep] = useState("credentials");
   const [code, setCode] = useState("");
   const [codeError, setCodeError] = useState(false);
 
-  // Mientras esperamos al backend, para deshabilitar el botón y mostrar spinner.
   const [loading, setLoading] = useState(false);
 
   const [alertData, setAlertData] = useState({
@@ -57,8 +55,6 @@ const Login = () => {
   const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const validatePassword = (password) => /^[A-Za-z\d]{8,}$/.test(password);
 
-  // Completa el login una vez que tenemos un token válido (sea directo o
-  // después de verificar el 2FA).
   const completeLogin = (token) => {
     const payload = JSON.parse(atob(token.split(".")[1]));
     const role = payload.role;
@@ -112,13 +108,12 @@ const Login = () => {
     setLoading(true);
 
     try {
-      // Si este navegador ya verificó 2FA antes (y no venció), lo mandamos
-      // para que el backend salte el paso del código.
       const deviceToken = localStorage.getItem("deviceToken");
 
       const response = await fetch(`${API_URL}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ email, password, deviceToken }),
       });
 
@@ -142,9 +137,6 @@ const Login = () => {
         return;
       }
 
-      // El backend puede pedir un código: por 2FA opcional, o porque el email
-      // todavía no está verificado. En ambos casos el token viene vacío y hay
-      // que verificar el código enviado por email (mismo paso).
       if (data.requiresTwoFactor || data.requiresEmailVerification) {
         setStep("twofactor");
         setCode("");
@@ -186,6 +178,7 @@ const Login = () => {
       const response = await fetch(`${API_URL}/api/auth/verify-2fa`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ email, code: code.trim() }),
       });
 
@@ -209,8 +202,6 @@ const Login = () => {
         return;
       }
 
-      // El backend nos da un token de dispositivo nuevo: lo guardamos para
-      // no tener que pedir 2FA de nuevo desde este navegador.
       if (data.deviceToken) {
         localStorage.setItem("deviceToken", data.deviceToken);
       }

@@ -25,15 +25,10 @@ const UserRegister = () => {
     message: "",
     type: "info",
   });
-
-  // Paso del flujo: "form" (datos del registro) o "verify" (código de email).
   const [step, setStep] = useState("form");
   const [code, setCode] = useState("");
   const [codeError, setCodeError] = useState(false);
-
-  // Mientras esperamos al backend, para deshabilitar el botón y mostrar spinner.
   const [loading, setLoading] = useState(false);
-
   const firstNameRef = useRef(null);
   const lastNameRef = useRef(null);
   const emailRef = useRef(null);
@@ -140,8 +135,6 @@ const UserRegister = () => {
         return;
       }
 
-      // Registro OK: el backend envió un código de verificación al email.
-      // Pasamos al paso de verificación (mantenemos el email, lo necesitamos).
       setStep("verify");
       setCode("");
       setCodeError(false);
@@ -202,8 +195,6 @@ const UserRegister = () => {
         return;
       }
 
-      // Este navegador ya probó tener acceso al email: lo guardamos como de
-      // confianza para no pedir 2FA de nuevo en el primer login.
       if (data.deviceToken) {
         localStorage.setItem("deviceToken", data.deviceToken);
       }
