@@ -4,9 +4,8 @@ import CustomAlert from "../../alert/CustomAlert";
 import CustomCard from "../../card/CustomCard";
 import CustomModal from "../../modal/CustomModal";
 import { AuthContext } from "../../authContext/AuthContext";
-import { API_URL } from "../../../api/config";
+import { apiFetch } from "../../../api/httpClient";
 
-// El backend devuelve los nombres de enum en inglés; los mostramos en español.
 const typeLabels = { Express: "Expreso", Standard: "Estándar" };
 const sizeLabels = { Small: "Pequeño", Medium: "Mediano", Large: "Grande" };
 const statusLabels = {
@@ -15,7 +14,6 @@ const statusLabels = {
   Delivered: "Entregado",
   Cancelled: "Cancelado",
 };
-// Colores de estado ya definidos en el CSS de la app.
 const statusClass = { Delivered: "entregado", Cancelled: "cancelado" };
 
 function ShippingTrack() {
@@ -37,11 +35,7 @@ function ShippingTrack() {
   useEffect(() => {
     if (!token) return;
     setLoading(true);
-    // El backend ya filtra por rol: un cliente recibe sus envíos, el personal
-    // (empleado/superadmin) recibe los de todos los clientes.
-    fetch(`${API_URL}/api/shipment`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    apiFetch("/api/shipment")
       .then((res) => res.json())
       .then((data) => setShipments(Array.isArray(data) ? data : []))
       .catch((err) => {
@@ -60,7 +54,6 @@ function ShippingTrack() {
     setShowModal(true);
   };
 
-  // Buscar por número: abre el modal con el detalle del envío encontrado.
   const handleSearch = (event) => {
     event.preventDefault();
     const q = search.trim().toLowerCase();

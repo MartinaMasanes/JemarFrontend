@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Container } from "react-bootstrap";
-import { API_URL } from "../../../api/config";
+import { apiFetch } from "../../../api/httpClient";
 
 const ConsultsTable = () => {
   const [consults, setConsults] = useState([]);
@@ -16,11 +16,7 @@ const ConsultsTable = () => {
 
     try {
       setLoading(true);
-      const response = await fetch(`${API_URL}/api/inquiry`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await apiFetch("/api/inquiry");
 
       const data = await response.json();
 

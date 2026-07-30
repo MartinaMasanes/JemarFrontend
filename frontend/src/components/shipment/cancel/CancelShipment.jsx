@@ -4,15 +4,11 @@ import CustomAlert from "../../alert/CustomAlert";
 import CustomCard from "../../card/CustomCard";
 import CustomModal from "../../modal/CustomModal";
 import { AuthContext } from "../../authContext/AuthContext";
-import { API_URL } from "../../../api/config";
+import { apiFetch } from "../../../api/httpClient";
 
-// El backend devuelve los nombres de enum en inglés; los mostramos en español.
 const typeLabels = { Express: "Expreso", Standard: "Estándar" };
 const sizeLabels = { Small: "Pequeño", Medium: "Mediano", Large: "Grande" };
 
-// Cancelado = 4 en Jemar.Domain.Enums.ShipmentStatusEnum. El backend valida
-// igual quién puede cancelar qué; acá solo filtramos para no hacer buscar a
-// ciegas envíos que de entrada no se van a poder cancelar.
 const CANCELLED_STATUS_ID = 4;
 
 function CancelShipment() {
@@ -36,9 +32,7 @@ function CancelShipment() {
   const loadShipments = () => {
     if (!token) return;
     setLoading(true);
-    fetch(`${API_URL}/api/shipment`, {
-      headers: { Authorization: `Bearer ${token}` },
-    })
+    apiFetch("/api/shipment")
       .then((res) => res.json())
       .then((data) => setShipments(Array.isArray(data) ? data : []))
       .catch((err) => {
@@ -54,8 +48,6 @@ function CancelShipment() {
 
   useEffect(loadShipments, [token]);
 
-  // Un cliente solo puede cancelar envíos propios y Pendientes; al staff
-  // además se le muestran los En tránsito (el backend igual valida todo esto).
   const cancellable = shipments.filter(
     (s) =>
       s.shipmentStatus === "Pending" ||
@@ -100,21 +92,16 @@ function CancelShipment() {
     }
   };
 
-  // Nota: hasta que el modal soporte estado de carga con spinner, este chequeo
-  // evita que un doble clic dispare dos cancelaciones del mismo envío.
   const confirmCancel = async () => {
     if (!target || cancelling) return;
 
     try {
       setCancelling(true);
-      const response = await fetch(
-        `${API_URL}/api/shipment/${target.id}/status`,
+      const response = await apiFetch(
+        `/api/shipment/${target.id}/status`,
         {
           method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ shipmentStatusId: CANCELLED_STATUS_ID }),
         }
       );
@@ -201,8 +188,8 @@ function CancelShipment() {
                   onClick={() => setShowTable((prev) => !prev)}
                 >
                   {showTable
-                    ? "Ocultar envíos cancelables"
-                    : "Ver envíos cancelables"}
+                    ? "Ocultar envíos"
+                    : "Ver todos los envíos"}
                 </span>
               </p>
             </CustomCard>

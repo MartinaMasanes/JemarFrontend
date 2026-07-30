@@ -3,7 +3,7 @@ import { Form } from "react-bootstrap";
 
 import { initialErrors } from "./ModifyRole.data";
 import { AuthContext } from "../../authContext/AuthContext";
-import { API_URL } from "../../../api/config";
+import { apiFetch } from "../../../api/httpClient";
 
 import CustomCard from "../../card/CustomCard";
 import CustomAlert from "../../alert/CustomAlert";
@@ -82,12 +82,9 @@ const ModifyRole = () => {
     }
 
     try {
-      const response = await fetch(`${API_URL}/api/user/role`, {
+      const response = await apiFetch("/api/user/role", {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, roleId: roleMap[newRole] }),
       });
 
@@ -97,7 +94,6 @@ const ModifyRole = () => {
           const data = await response.json();
           message = data.error || message;
         } catch {
-          // 200/errores sin body JSON: usamos el mensaje por defecto
         }
         setAlertData({
           show: true,
