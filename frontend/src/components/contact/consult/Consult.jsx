@@ -2,7 +2,7 @@ import { Form } from "react-bootstrap";
 import { useRef, useState } from "react";
 
 import { initialErrors } from "./Consult.data";
-import { API_URL } from "../../../api/config";
+import { apiFetch } from "../../../api/httpClient";
 
 import CustomCard from "../../card/CustomCard";
 import CustomAlert from "../../alert/CustomAlert";
@@ -92,10 +92,10 @@ const Consult = () => {
       return;
     }
 
-    const consultData = { firstName, lastName, email, consult };
+    const consultData = { firstName, lastName, email, message: consult };
 
     try {
-      const response = await fetch(`${API_URL}/api/inquiry`, {
+      const response = await apiFetch("/api/inquiry", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(consultData),

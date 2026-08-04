@@ -1,9 +1,11 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useContext } from "react";
 import { Form } from "react-bootstrap";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 
 import { initialErrors } from "./UserRegister.data.js";
 import { API_URL } from "../../api/config";
+import { AuthContext } from "../authContext/AuthContext";
+import { IsTokenValid } from "../protected/Protected.helpers";
 
 import Background from "../background/Background";
 import BackArrow from "../back/BackArrow";
@@ -14,6 +16,7 @@ import CustomModal from "../modal/CustomModal";
 import "../style/Styles.css";
 
 const UserRegister = () => {
+  const { token } = useContext(AuthContext);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -226,9 +229,13 @@ const UserRegister = () => {
     }
   };
 
+  if (IsTokenValid(token)) {
+    return <Navigate to="/" replace />;
+  }
+
   return (
     <>
-      <Background image="/images/ImageRegister.webp">
+         <Background image="/images/ImageLogin.webp">
         <BackArrow />
         <div className="screen d-flex justify-content-start">
           <CustomAlert

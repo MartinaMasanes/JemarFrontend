@@ -16,7 +16,7 @@ function Dashboard() {
 
 
   return (
-    <Background image="/images/ImageDashboard.webp">
+    <Background image="/images/ImageContact.webp">
       <BackArrow />
       <Container className="d-flex align-items-center min-vh-100 flex-column">
 

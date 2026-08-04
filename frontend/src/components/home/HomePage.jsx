@@ -22,19 +22,21 @@ const HomePage = () => {
   const buttonsByRole = {
     SuperAdmin: ["shipment", "modify", "dashboard"],
     Employee: ["shipment", "modify"],
-    Client: ["shipment"],
+    Client: ["shipment", "consults"],
   };
 
   const allowedButtons = token ? buttonsByRole[role] || [] : [];
 
   const buttons = [
     { key: "shipment", label: "Envíos" },
+    { key: "consults", label: "Consultas" },
     { key: "modify", label: "Modificar" },
     { key: "dashboard", label: "Panel" },
   ];
 
   const routes = {
     shipment: "/shipment",
+    consults: "/consults",
     modify: "/modify",
     dashboard: "/dashboard",
   };
