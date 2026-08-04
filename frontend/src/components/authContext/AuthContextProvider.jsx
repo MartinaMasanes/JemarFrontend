@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 import { AuthContext } from "./AuthContext";
 import { IsTokenValid } from "../protected/Protected.helpers";
 import { API_URL } from "../../api/config";
+import { apiFetch } from "../../api/httpClient";
 
 const decodeJWT = (token) => {
   try {
@@ -30,6 +31,8 @@ const getInitialToken = () => localStorage.getItem("token");
 const AuthContextProvider = ({ children }) => {
   const [token, setToken] = useState(getInitialToken());
   const [role, setRole] = useState(getInitialRole());
+  const [user, setUser] = useState(null);
+
   useEffect(() => {
     if (token && !IsTokenValid(token)) {
       localStorage.removeItem("token");
@@ -38,6 +41,30 @@ const AuthContextProvider = ({ children }) => {
       setRole(null);
     }
   }, [token]);
+
+  const loadUser = useCallback(async () => {
+    if (!token) {
+      setUser(null);
+      return;
+    }
+
+    try {
+      const response = await apiFetch("/api/auth/me");
+      if (!response.ok) {
+        setUser(null);
+        return;
+      }
+      const data = await response.json();
+      setUser({ ...data, name: data.firstName });
+    } catch (error) {
+      console.error("Error cargando el perfil:", error);
+      setUser(null);
+    }
+  }, [token]);
+
+  useEffect(() => {
+    loadUser();
+  }, [loadUser]);
 
   const handleLogin = (token, role) => {
     setToken(token);
@@ -58,6 +85,7 @@ const AuthContextProvider = ({ children }) => {
 
     setToken(null);
     setRole(null);
+    setUser(null);
     localStorage.removeItem("token");
     localStorage.removeItem("role");
   };
@@ -68,8 +96,10 @@ const AuthContextProvider = ({ children }) => {
         value={{
           token,
           role,
+          user,
           onLogin: handleLogin,
           onLogout: handleLogout,
+          refreshUser: loadUser,
         }}
       >
         {children}

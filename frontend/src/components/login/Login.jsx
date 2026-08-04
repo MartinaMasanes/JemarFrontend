@@ -1,9 +1,10 @@
 import { useState, useRef, useContext } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 import { Form, Row, Col, Container } from "react-bootstrap";
 
 import { initialErrors } from "./Login.data";
 import { AuthContext } from "../authContext/AuthContext";
+import { IsTokenValid } from "../protected/Protected.helpers";
 import { API_URL } from "../../api/config";
 
 import Background from "../background/Background";
@@ -14,7 +15,7 @@ import CustomCard from "../card/CustomCard";
 const Login = () => {
   const navigate = useNavigate();
 
-  const { onLogin } = useContext(AuthContext);
+  const { token, onLogin } = useContext(AuthContext);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -226,6 +227,10 @@ const Login = () => {
     setPassword("");
     setAlertData({ show: false, message: "", type: "info" });
   };
+
+  if (IsTokenValid(token)) {
+    return <Navigate to="/" replace />;
+  }
 
   return (
     <>

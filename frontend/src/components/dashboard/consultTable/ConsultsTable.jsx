@@ -71,7 +71,7 @@ const ConsultsTable = () => {
                     <td>{consult.firstName}</td>
                     <td>{consult.lastName}</td>
                     <td>{consult.email}</td>
-                    <td>{consult.consult}</td>
+                    <td>{consult.message}</td>
                   </tr>
                 ))}
               </tbody>

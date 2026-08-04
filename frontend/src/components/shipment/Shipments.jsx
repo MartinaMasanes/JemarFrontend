@@ -33,7 +33,7 @@ const Shipments = () => {
 
   return (
     <>
-      <Background image="/images/ImageShipment.webp">
+          <Background image="/images/ImageContact.webp">
         <BackArrow />
         <Container className="d-flex align-items-center min-vh-100 flex-column">
 

@@ -9,6 +9,8 @@ import Login from "./components/login/Login";
 import ForgotPassword from "./components/forgotPassword/ForgotPassword";
 import UserRegister from "./components/register/UserRegister";
 import Shipments from "./components/shipment/Shipments";
+import Consults from "./components/consult/Consults";
+import Profile from "./components/profile/Profile";
 import Modify from "./components/modify/Modify";
 import Dashboard from "./components/dashboard/Dashboard";
 import ErrorNotLogged from "./components/error/errorNotLogged/errorNotLogged";
@@ -38,6 +40,8 @@ function App() {
 
           <Route element={<Protected />}>
             <Route path="/shipment" element={<Shipments />} />
+            <Route path="/consults" element={<Consults />} />
+            <Route path="/profile" element={<Profile />} />
 
             <Route
               element={<RoleProtected allowedRoles={["Employee", "SuperAdmin"]} />}

@@ -33,7 +33,7 @@ const visibleButtons = buttons.filter((btn) =>
 
   return (
     <>
-      <Backgrpund image="/images/ImageModify.webp">
+      <Backgrpund image="/images/ImageContact.webp">
         <BackArrow />
         <Container className="d-flex align-items-center min-vh-100 flex-column">
 
