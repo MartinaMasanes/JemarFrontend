@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 import { initialErrors, initialResetErrors } from "./ForgotPassword.data.js";
 import { API_URL } from "../../api/config";
+import { validateEmail, validatePassword } from "../../utils/validators";
 
 import Background from "../background/Background";
 import BackArrow from "../back/BackArrow";
@@ -35,9 +36,6 @@ const ForgotPassword = () => {
   const codeRef = useRef(null);
   const newPasswordRef = useRef(null);
   const confirmPasswordRef = useRef(null);
-
-  const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  const validatePassword = (password) => /^[A-Za-z\d]{8,}$/.test(password.trim());
 
   const handleEmailChange = (event) => {
     setEmail(event.target.value);

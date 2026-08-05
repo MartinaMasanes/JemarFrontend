@@ -50,7 +50,9 @@ function App() {
             </Route>
 
             <Route
-              element={<RoleProtected allowedRoles={["SuperAdmin"]} />}
+              element={
+                <RoleProtected allowedRoles={["Employee", "SuperAdmin"]} />
+              }
             >
               <Route path="/dashboard" element={<Dashboard />} />
             </Route>

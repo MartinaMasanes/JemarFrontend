@@ -22,6 +22,7 @@ function ShippingTrack() {
 
   const [shipments, setShipments] = useState([]);
   const [search, setSearch] = useState("");
+  const [searchError, setSearchError] = useState(false);
   const [showTable, setShowTable] = useState(false);
   const [loading, setLoading] = useState(false);
   const [alertData, setAlertData] = useState({
@@ -59,11 +60,7 @@ function ShippingTrack() {
     const q = search.trim().toLowerCase();
 
     if (!q) {
-      setAlertData({
-        show: true,
-        message: "Ingresá un número de envío.",
-        type: "error",
-      });
+      setSearchError(true);
       return;
     }
 
@@ -120,15 +117,25 @@ function ShippingTrack() {
               buttonType="submit"
             >
               <Form.Group className="inputs-group mb-3 fw-bold">
-                <Form.Label>Número de envío:</Form.Label>
+                <Form.Label>
+                  Número de envío: <span className="text-danger">*</span>
+                </Form.Label>
                 <Form.Control
-                  className="custom-input"
+                  className={`custom-input ${searchError ? "is-invalid" : ""}`}
                   type="text"
                   placeholder="Buscá por número"
                   value={search}
-                  onChange={(e) => setSearch(e.target.value)}
+                  onChange={(e) => {
+                    setSearch(e.target.value);
+                    setSearchError(false);
+                  }}
                   autoComplete="off"
                 />
+                {searchError && (
+                  <p className="text-danger mt-1">
+                    Ingresá un número de envío
+                  </p>
+                )}
               </Form.Group>
               <p className="text-center mt-2 mb-0">
                 <span

@@ -1,18 +1,30 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 
 import { Button, Container, Row, Col } from "react-bootstrap";
 import Background from "../background/Background";
 import BackArrow from "../back/BackArrow";
 import UsersTable from "./usersTable/UsersTable";
 import ConsultsTable from "./consultTable/ConsultsTable";
+import ShipmentsTable from "./shipmentTable/ShipmentsTable";
+import { AuthContext } from "../authContext/AuthContext";
+
+const buttonsByRole = {
+  SuperAdmin: [
+    { key: "users", label: "Lista de usuarios" },
+    { key: "shipments", label: "Lista de envíos" },
+    { key: "consults", label: "Lista de consultas" },
+  ],
+  Employee: [
+    { key: "shipments", label: "Lista de envíos" },
+    { key: "consults", label: "Lista de consultas" },
+  ],
+};
 
 function Dashboard() {
+  const { role } = useContext(AuthContext);
   const [activeComponent, setActiveComponent] = useState("");
 
-   const buttons = [
-    { key: "users", label: "Lista de usuarios" },
-    { key: "consults", label: "Lista de consultas" },
-  ];
+  const buttons = buttonsByRole[role] || [];
 
 
   return (
@@ -24,6 +36,7 @@ function Dashboard() {
           <Row className="w-100">
             <Col>
               {activeComponent === "users" && <UsersTable />}
+              {activeComponent === "shipments" && <ShipmentsTable />}
               {activeComponent === "consults" && <ConsultsTable />}
             </Col>
           </Row>

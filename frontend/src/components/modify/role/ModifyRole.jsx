@@ -8,6 +8,7 @@ import { apiFetch } from "../../../api/httpClient";
 import CustomCard from "../../card/CustomCard";
 import CustomAlert from "../../alert/CustomAlert";
 import CustomModal from "../../modal/CustomModal";
+import { validateEmail } from "../../../utils/validators";
 
 const roleMap = {
   Client: 1,
@@ -45,8 +46,6 @@ const ModifyRole = () => {
       </h3>
     );
   }
-
-  const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   const handleEmailChange = (e) => {
     const value = e.target.value;
@@ -143,7 +142,9 @@ const ModifyRole = () => {
         buttonText="Modificar"
         buttonType="submit">
           <Form.Group className="inputs-group mb-3 fw-bold">
-            <Form.Label>Email del usuario:</Form.Label>
+            <Form.Label>
+              Email del usuario: <span className="text-danger">*</span>
+            </Form.Label>
             <Form.Control
               ref={emailRef}
               className={`custom-input ${errors.email ? "is-invalid" : ""}`}
@@ -161,7 +162,9 @@ const ModifyRole = () => {
           </Form.Group>
 
           <Form.Group className="inputs-group mb-3 fw-bold">
-            <Form.Label>Nuevo Rol:</Form.Label>
+            <Form.Label>
+              Nuevo Rol: <span className="text-danger">*</span>
+            </Form.Label>
             <Form.Select
               className={`custom-input ${errors.newRole ? "is-invalid" : ""}`}
               value={newRole}

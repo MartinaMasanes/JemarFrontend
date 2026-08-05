@@ -8,6 +8,7 @@ import { apiFetch } from "../../../api/httpClient";
 import CustomCard from "../../card/CustomCard";
 import CustomAlert from "../../alert/CustomAlert";
 import CustomModal from "../../modal/CustomModal";
+import { validateEmail } from "../../../utils/validators";
 
 const LowUser = () => {
   const { token, role } = useContext(AuthContext);
@@ -31,8 +32,6 @@ const LowUser = () => {
       </h3>
     );
   }
-
-  const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   const handleEmailChange = (e) => {
     const value = e.target.value;
@@ -148,7 +147,9 @@ const LowUser = () => {
           buttonText="Eliminar"
           buttonType="submit">
           <Form.Group className="inputs-group mb-3 fw-bold">
-            <Form.Label>Email del usuario:</Form.Label>
+            <Form.Label>
+              Email del usuario: <span className="text-danger">*</span>
+            </Form.Label>
             <Form.Control
               ref={emailRef}
               className={`custom-input ${errors.email ? "is-invalid" : ""}`}
@@ -173,8 +174,7 @@ const LowUser = () => {
         title="Confirmar baja"
         body={`¿Estás seguro que deseas eliminar al usuario con email ${email}?`}
         onContinue={Delete}
-        confirmText="Confirmar"
-        cancelText="Cancelar"
+        continueText="Confirmar"
       />
     </div>
   );

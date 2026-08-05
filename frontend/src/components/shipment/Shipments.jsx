@@ -11,15 +11,16 @@ import TrackShipment from "./track/TrackShipment";
 
 const buttonsByRole = {
   Client: ["create", "cancel", "track"],
-  Employee: ["create", "track"],
-  SuperAdmin: ["create", "track"],
+  Employee: ["create"],
+  SuperAdmin: ["create"],
 };
 
 const Shipments = () => {
   const { role, token } = useContext(AuthContext);
-  const [activeComponent, setActiveComponent] = useState("");
-
   const allowedButtons = token ? buttonsByRole[role] || [] : [];
+  const [activeComponent, setActiveComponent] = useState(
+    allowedButtons.length === 1 ? allowedButtons[0] : ""
+  );
 
   const buttons = [
     { key: "create", label: "Crear envío" },
@@ -50,20 +51,22 @@ const Shipments = () => {
             </Row>
           </div>
 
-          <Row className="button-bar mt-auto mb-3">
-            {visibleButtons.map((btn) => (
-              <Col xs={6} sm="auto" key={btn.key}>
-                <Button
-                  className={`border-0 fs-4 mx-4 Button-acction ${
-                    activeComponent === btn.key ? "active" : ""
-                  }`}
-                  onClick={() => setActiveComponent(btn.key)}
-                >
-                  {btn.label}
-                </Button>
-              </Col>
-            ))}
-          </Row>
+          {visibleButtons.length > 1 && (
+            <Row className="button-bar mt-auto mb-3">
+              {visibleButtons.map((btn) => (
+                <Col xs={6} sm="auto" key={btn.key}>
+                  <Button
+                    className={`border-0 fs-4 mx-4 Button-acction ${
+                      activeComponent === btn.key ? "active" : ""
+                    }`}
+                    onClick={() => setActiveComponent(btn.key)}
+                  >
+                    {btn.label}
+                  </Button>
+                </Col>
+              ))}
+            </Row>
+          )}
         </Container>
       </Background>
     </>

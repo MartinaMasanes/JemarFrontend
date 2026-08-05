@@ -34,9 +34,8 @@ function ModifyState() {
   const { token } = useContext(AuthContext);
 
   const [shipments, setShipments] = useState([]);
-  const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
-  const [showTable, setShowTable] = useState(false);
+  const [searchError, setSearchError] = useState(false);
 
   const [selected, setSelected] = useState(null);
   const [newStatusId, setNewStatusId] = useState("");
@@ -52,7 +51,6 @@ function ModifyState() {
 
   const loadShipments = () => {
     if (!token) return;
-    setLoading(true);
     apiFetch("/api/shipment")
       .then((res) => res.json())
       .then((data) => setShipments(Array.isArray(data) ? data : []))
@@ -63,8 +61,7 @@ function ModifyState() {
           message: "No se pudieron cargar los envíos.",
           type: "error",
         });
-      })
-      .finally(() => setLoading(false));
+      });
   };
 
   useEffect(loadShipments, [token]);
@@ -80,6 +77,7 @@ function ModifyState() {
 
   const handleSearchChange = (event) => {
     setSearch(event.target.value);
+    setSearchError(false);
     setSelected(null);
   };
 
@@ -88,11 +86,7 @@ function ModifyState() {
     const q = search.trim().toLowerCase();
 
     if (!q) {
-      setAlertData({
-        show: true,
-        message: "Ingresá un número de envío.",
-        type: "error",
-      });
+      setSearchError(true);
       return;
     }
 
@@ -177,78 +171,31 @@ function ModifyState() {
         onClose={() => setAlertData({ ...alertData, show: false })}
       />
 
-      <div
-        className="track-layout"
-        style={showTable ? { width: "min(1050px, 88vw)" } : undefined}
-      >
-        <div className="d-flex flex-column align-items-center track-card">
-          <Form noValidate onSubmit={handleSearch}>
-            <CustomCard
-              title="MODIFICAR ESTADO"
-              buttonText="Buscar envío"
-              buttonType="submit"
-            >
-              <Form.Group className="inputs-group mb-3 fw-bold">
-                <Form.Label>Número de envío:</Form.Label>
-                <Form.Control
-                  className="custom-input"
-                  type="text"
-                  placeholder="Buscá por número"
-                  value={search}
-                  onChange={handleSearchChange}
-                  autoComplete="off"
-                />
-              </Form.Group>
-
-              <p className="text-center mt-2 mb-0">
-                <span
-                  className="custom-link"
-                  style={{ cursor: "pointer" }}
-                  onClick={() => setShowTable((prev) => !prev)}
-                >
-                  {showTable ? "Ocultar envíos" : "Ver envíos modificables"}
-                </span>
-              </p>
-            </CustomCard>
-          </Form>
-        </div>
-
-        {showTable && (
-          <div className="track-table">
-            <div className="back-table ocultar-scroll text-center p-3">
-              <h2 className="title-card mb-3">Envíos modificables</h2>
-
-              {loading ? (
-                <p className="titulo fw-bold">Cargando envíos...</p>
-              ) : modifiable.length > 0 ? (
-                <div style={{ overflowX: "auto" }}>
-                  <table className="table-container">
-                    <thead>
-                      <tr>
-                        <th>N°</th>
-                        <th>Cliente</th>
-                        <th>Estado</th>
-                        <th>Destino</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {modifiable.map((s) => (
-                        <tr key={s.id} onClick={() => openSelect(s)}>
-                          <td>{s.id}</td>
-                          <td>{s.clientName}</td>
-                          <td>{statusLabels[s.shipmentStatus] || s.shipmentStatus}</td>
-                          <td>{s.destination}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <h2 className="title-card">No hay envíos modificables.</h2>
+      <div className="d-flex flex-column align-items-center track-card">
+        <Form noValidate onSubmit={handleSearch}>
+          <CustomCard
+            title="MODIFICAR ESTADO"
+            buttonText="Buscar envío"
+            buttonType="submit"
+          >
+            <Form.Group className="inputs-group mb-3 fw-bold">
+              <Form.Label>
+                Número de envío: <span className="text-danger">*</span>
+              </Form.Label>
+              <Form.Control
+                className={`custom-input ${searchError ? "is-invalid" : ""}`}
+                type="text"
+                placeholder="Buscá por número"
+                value={search}
+                onChange={handleSearchChange}
+                autoComplete="off"
+              />
+              {searchError && (
+                <p className="text-danger mt-1">Ingresá un número de envío</p>
               )}
-            </div>
-          </div>
-        )}
+            </Form.Group>
+          </CustomCard>
+        </Form>
       </div>
 
       {selected && (
@@ -287,7 +234,9 @@ function ModifyState() {
               ))}
 
               <Form.Group className="inputs-group mt-3 fw-bold">
-                <Form.Label>Nuevo estado:</Form.Label>
+                <Form.Label>
+                  Nuevo estado: <span className="text-danger">*</span>
+                </Form.Label>
                 <Form.Select
                   className="custom-input"
                   value={newStatusId}
