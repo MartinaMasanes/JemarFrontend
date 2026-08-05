@@ -6,6 +6,7 @@ import { initialErrors } from "./UserRegister.data.js";
 import { API_URL } from "../../api/config";
 import { AuthContext } from "../authContext/AuthContext";
 import { IsTokenValid } from "../protected/Protected.helpers";
+import { validateEmail, validateName, validatePassword } from "../../utils/validators";
 
 import Background from "../background/Background";
 import BackArrow from "../back/BackArrow";
@@ -59,12 +60,6 @@ const UserRegister = () => {
     setPassword(event.target.value);
     setErrors((prev) => ({ ...prev, password: false }));
   };
-
-  const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  const validateName = (name) =>
-    /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]{3,}$/.test(name.trim());
-  const validatePassword = (password) =>
-    /^[A-Za-z\d]{8,}$/.test(password.trim());
 
   const handleSubmit = async (event) => {
     event.preventDefault();

@@ -21,7 +21,7 @@ const HomePage = () => {
 
   const buttonsByRole = {
     SuperAdmin: ["shipment", "modify", "dashboard"],
-    Employee: ["shipment", "modify"],
+    Employee: ["shipment", "modify", "dashboard"],
     Client: ["shipment", "consults"],
   };
 

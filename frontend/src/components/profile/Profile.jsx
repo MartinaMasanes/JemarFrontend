@@ -8,6 +8,7 @@ import Background from "../background/Background";
 import BackArrow from "../back/BackArrow";
 import CustomCard from "../card/CustomCard";
 import CustomAlert from "../alert/CustomAlert";
+import { validateEmail, validateName, validatePassword } from "../../utils/validators";
 
 const Profile = () => {
   const { user, token, refreshUser } = useContext(AuthContext);
@@ -37,11 +38,6 @@ const Profile = () => {
       setEmail(user.email || "");
     }
   }, [user]);
-
-  const validateName = (name) =>
-    /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]{3,}$/.test(name.trim());
-  const validateEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-  const validatePassword = (value) => /^[A-Za-z\d]{8,}$/.test(value.trim());
 
   const handleProfileSubmit = async (event) => {
     event.preventDefault();
@@ -158,7 +154,9 @@ const Profile = () => {
                 loadingText="Guardando..."
               >
                 <Form.Group className="inputs-group mb-3 fw-bold">
-                  <Form.Label>Nombre:</Form.Label>
+                  <Form.Label>
+                    Nombre: <span className="text-danger">*</span>
+                  </Form.Label>
                   <Form.Control
                     className={`custom-input ${
                       profileErrors.firstName ? "is-invalid" : ""
@@ -178,7 +176,9 @@ const Profile = () => {
                 </Form.Group>
 
                 <Form.Group className="inputs-group mb-3 fw-bold">
-                  <Form.Label>Apellido:</Form.Label>
+                  <Form.Label>
+                    Apellido: <span className="text-danger">*</span>
+                  </Form.Label>
                   <Form.Control
                     className={`custom-input ${
                       profileErrors.lastName ? "is-invalid" : ""
@@ -198,7 +198,9 @@ const Profile = () => {
                 </Form.Group>
 
                 <Form.Group className="inputs-group mb-3 fw-bold">
-                  <Form.Label>Correo electrónico:</Form.Label>
+                  <Form.Label>
+                    Correo electrónico: <span className="text-danger">*</span>
+                  </Form.Label>
                   <Form.Control
                     className={`custom-input ${
                       profileErrors.email ? "is-invalid" : ""
@@ -228,7 +230,9 @@ const Profile = () => {
                 loadingText="Actualizando..."
               >
                 <Form.Group className="inputs-group mb-3 fw-bold">
-                  <Form.Label>Contraseña actual:</Form.Label>
+                  <Form.Label>
+                    Contraseña actual: <span className="text-danger">*</span>
+                  </Form.Label>
                   <Form.Control
                     className={`custom-input ${
                       passwordErrors.currentPassword ? "is-invalid" : ""
@@ -252,7 +256,9 @@ const Profile = () => {
                 </Form.Group>
 
                 <Form.Group className="inputs-group mb-3 fw-bold">
-                  <Form.Label>Nueva contraseña:</Form.Label>
+                  <Form.Label>
+                    Nueva contraseña: <span className="text-danger">*</span>
+                  </Form.Label>
                   <Form.Control
                     className={`custom-input ${
                       passwordErrors.newPassword ? "is-invalid" : ""
@@ -273,7 +279,10 @@ const Profile = () => {
                 </Form.Group>
 
                 <Form.Group className="inputs-group mb-3 fw-bold">
-                  <Form.Label>Confirmar nueva contraseña:</Form.Label>
+                  <Form.Label>
+                    Confirmar nueva contraseña:{" "}
+                    <span className="text-danger">*</span>
+                  </Form.Label>
                   <Form.Control
                     className={`custom-input ${
                       passwordErrors.confirmPassword ? "is-invalid" : ""

@@ -6,6 +6,7 @@ import { initialErrors } from "./Login.data";
 import { AuthContext } from "../authContext/AuthContext";
 import { IsTokenValid } from "../protected/Protected.helpers";
 import { API_URL } from "../../api/config";
+import { validateEmail, validatePassword } from "../../utils/validators";
 
 import Background from "../background/Background";
 import BackArrow from "../back/BackArrow";
@@ -52,9 +53,6 @@ const Login = () => {
       password: false,
     }));
   };
-
-  const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-  const validatePassword = (password) => /^[A-Za-z\d]{8,}$/.test(password);
 
   const completeLogin = (token) => {
     const payload = JSON.parse(atob(token.split(".")[1]));
@@ -258,7 +256,7 @@ const Login = () => {
                     <Form.Label>Correo Electrónico: <span className="text-danger">*</span></Form.Label>
                     <Form.Control
                       ref={emailRef}
-                      className={`custom-input ${errors.email}`}
+                      className={`custom-input ${errors.email ? "is-invalid" : ""}`}
                       type="email"
                       placeholder="usuario@ejemplo.com"
                       value={email}
@@ -281,7 +279,7 @@ const Login = () => {
                     <Form.Label>Contraseña: <span className="text-danger">*</span></Form.Label>
                     <Form.Control
                       ref={passwordRef}
-                      className={`custom-input ${errors.password}`}
+                      className={`custom-input ${errors.password ? "is-invalid" : ""}`}
                       type={showPassword ? "text" : "password"}
                       placeholder="********"
                       value={password}
@@ -350,7 +348,7 @@ const Login = () => {
                     <Form.Label>Código de verificación: <span className="text-danger">*</span></Form.Label>
                     <Form.Control
                       ref={codeRef}
-                      className={`custom-input ${codeError ? "invalid" : ""}`}
+                      className={`custom-input ${codeError ? "is-invalid" : ""}`}
                       type="text"
                       inputMode="numeric"
                       placeholder="Ej: 123456"

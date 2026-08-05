@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 
 import { initialErrors } from "./Consult.data";
 import { apiFetch } from "../../../api/httpClient";
+import { validateEmail, validateName } from "../../../utils/validators";
 
 import CustomCard from "../../card/CustomCard";
 import CustomAlert from "../../alert/CustomAlert";
@@ -44,8 +45,6 @@ const Consult = () => {
     setErrors((prev) => ({ ...prev, consult: false }));
   };
 
-  const validateName = (name) => /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]{3,}$/.test(name.trim());
-  const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   const validateConsult = (msg) => msg.trim() !== "";
 
   const handleSubmit = async (event) => {

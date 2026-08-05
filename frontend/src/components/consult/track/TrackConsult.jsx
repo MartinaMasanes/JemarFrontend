@@ -19,6 +19,7 @@ function TrackConsult() {
 
   const [consults, setConsults] = useState([]);
   const [search, setSearch] = useState("");
+  const [searchError, setSearchError] = useState(false);
   const [showTable, setShowTable] = useState(false);
   const [loading, setLoading] = useState(false);
   const [alertData, setAlertData] = useState({
@@ -80,11 +81,7 @@ function TrackConsult() {
     const q = search.trim().toLowerCase();
 
     if (!q) {
-      setAlertData({
-        show: true,
-        message: "Ingresá un número de consulta.",
-        type: "error",
-      });
+      setSearchError(true);
       return;
     }
 
@@ -204,15 +201,25 @@ function TrackConsult() {
               buttonType="submit"
             >
               <Form.Group className="inputs-group mb-3 fw-bold">
-                <Form.Label>Número de consulta:</Form.Label>
+                <Form.Label>
+                  Número de consulta: <span className="text-danger">*</span>
+                </Form.Label>
                 <Form.Control
-                  className="custom-input"
+                  className={`custom-input ${searchError ? "is-invalid" : ""}`}
                   type="text"
                   placeholder="Buscá por número"
                   value={search}
-                  onChange={(e) => setSearch(e.target.value)}
+                  onChange={(e) => {
+                    setSearch(e.target.value);
+                    setSearchError(false);
+                  }}
                   autoComplete="off"
                 />
+                {searchError && (
+                  <p className="text-danger mt-1">
+                    Ingresá un número de consulta
+                  </p>
+                )}
               </Form.Group>
               <p className="text-center mt-2 mb-0">
                 <span
@@ -307,7 +314,9 @@ function TrackConsult() {
 
               {modalData.status === "Answered" && (
                 <Form.Group className="inputs-group mt-3 fw-bold">
-                  <Form.Label>Responder:</Form.Label>
+                  <Form.Label>
+                    Responder: <span className="text-danger">*</span>
+                  </Form.Label>
                   <Form.Control
                     className={`custom-input ${
                       replyError ? "is-invalid" : ""

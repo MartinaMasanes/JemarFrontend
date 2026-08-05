@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useContext } from "react";
-import { Form } from "react-bootstrap";
+import { Form, Button } from "react-bootstrap";
 
 import { initialErrors } from "./CreateShipment.data";
 import { AuthContext } from "../../authContext/AuthContext";
@@ -8,6 +8,11 @@ import { apiFetch } from "../../../api/httpClient";
 import CustomModal from "../../modal/CustomModal";
 import CustomCard from "../../card/CustomCard";
 import CustomAlert from "../../alert/CustomAlert";
+import {
+  validateEmail,
+  validateName,
+  validatePassword,
+} from "../../../utils/validators";
 
 const shipmentTypeLabels = {
   Express: "Expreso",
@@ -51,7 +56,6 @@ const ShippingQuote = () => {
     email: false,
     password: false,
   });
-  const [clientCreateError, setClientCreateError] = useState("");
   const [creatingClient, setCreatingClient] = useState(false);
   const [emailStatus, setEmailStatus] = useState("idle");
   const [emailTakenRole, setEmailTakenRole] = useState(null);
@@ -140,11 +144,9 @@ const ShippingQuote = () => {
     setErrors((prev) => ({ ...prev, packageSize: false }));
   };
 
-  const isValidEmail = (value) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-
   const checkEmailAvailability = (email) => {
     clearTimeout(emailCheckRef.current);
-    if (!isValidEmail(email)) {
+    if (!validateEmail(email)) {
       setEmailStatus("idle");
       return;
     }
@@ -223,7 +225,6 @@ const ShippingQuote = () => {
       email: false,
       password: false,
     });
-    setClientCreateError("");
     setClientSuggestions([]);
     setShowClientModal(true);
   };
@@ -231,7 +232,6 @@ const ShippingQuote = () => {
   const handleNewClientChange = (field) => (event) => {
     setNewClient((prev) => ({ ...prev, [field]: event.target.value }));
     setNewClientErrors((prev) => ({ ...prev, [field]: false }));
-    setClientCreateError("");
   };
 
   const handleCreateClient = async () => {
@@ -240,7 +240,6 @@ const ShippingQuote = () => {
     const email = newClient.email.trim();
     const password = newClient.password;
 
-    const nameRegex = /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/;
     const errs = {
       firstName: false,
       lastName: false,
@@ -249,20 +248,16 @@ const ShippingQuote = () => {
     };
 
     if (!firstName) errs.firstName = "empty";
-    else if (firstName.length <= 3 || !nameRegex.test(firstName))
-      errs.firstName = "invalid";
+    else if (!validateName(firstName)) errs.firstName = "invalid";
 
     if (!lastName) errs.lastName = "empty";
-    else if (lastName.length <= 3 || !nameRegex.test(lastName))
-      errs.lastName = "invalid";
+    else if (!validateName(lastName)) errs.lastName = "invalid";
 
     if (!email) errs.email = "empty";
-    else if (!isValidEmail(email)) errs.email = "invalid";
+    else if (!validateEmail(email)) errs.email = "invalid";
 
-    const letters = (password.match(/[a-zA-Z]/g) || []).length;
-    const digits = (password.match(/[0-9]/g) || []).length;
     if (!password) errs.password = "empty";
-    else if (letters < 3 || digits < 1) errs.password = "invalid";
+    else if (!validatePassword(password)) errs.password = "invalid";
 
     if (errs.firstName || errs.lastName || errs.email || errs.password) {
       setNewClientErrors(errs);
@@ -271,7 +266,6 @@ const ShippingQuote = () => {
 
     try {
       setCreatingClient(true);
-      setClientCreateError("");
       const response = await apiFetch("/api/shipment/clients", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -294,7 +288,7 @@ const ShippingQuote = () => {
       });
     } catch (error) {
       console.error("Error registrando cliente:", error);
-      setClientCreateError(error.message);
+      setAlertData({ show: true, message: error.message, type: "error" });
     } finally {
       setCreatingClient(false);
     }
@@ -593,13 +587,15 @@ const ShippingQuote = () => {
                           <p className="text-danger mt-1">
                             No hay clientes con ese correo.
                           </p>
-                          <button
-                            type="button"
-                            className="custom-button w-100"
-                            onClick={openClientModal}
-                          >
-                            Registrar nuevo cliente
-                          </button>
+                          <div className="text-center">
+                            <Button
+                              type="button"
+                              className="custom-button w-50"
+                              onClick={openClientModal}
+                            >
+                              Registrar nuevo cliente
+                            </Button>
+                          </div>
                         </>
                       )}
                     </div>
@@ -834,14 +830,11 @@ const ShippingQuote = () => {
                 )}
                 {newClientErrors.password === "invalid" && (
                   <p className="text-danger mt-1">
-                    La contraseña debe tener al menos 3 letras y 1 número
+                    Debe ingresar al menos 8 caracteres, 1 número y 1 letra
                   </p>
                 )}
               </Form.Group>
 
-              {clientCreateError && (
-                <p className="text-danger mt-1">{clientCreateError}</p>
-              )}
               {creatingClient && (
                 <p className="titulo mt-1 mb-0">Registrando cliente...</p>
               )}
