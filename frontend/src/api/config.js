@@ -1,1 +1,1 @@
-export const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:5186";
+export const API_URL = import.meta.env.VITE_API_URL ?? "http://localhost:7098";
