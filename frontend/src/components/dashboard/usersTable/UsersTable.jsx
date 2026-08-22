@@ -7,6 +7,7 @@ const UsersTable = () => {
   const [loading, setLoading] = useState(false);
   const [alertData, setAlertData] = useState({ show: false, message: "", type: "" });
   const [filterStatus, setFilterStatus] = useState("");
+  const [updatingEmail, setUpdatingEmail] = useState(null);
 
   const fetchUsers = async () => {
     const token = localStorage.getItem("token");
@@ -37,6 +38,33 @@ const UsersTable = () => {
   useEffect(() => {
     fetchUsers();
   }, []);
+
+  const toggleStatus = async (user) => {
+    try {
+      setUpdatingEmail(user.email);
+      const response = await apiFetch("/api/user/status", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: user.email, isActive: !user.isActive }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        throw new Error(data.error || "No se pudo actualizar el estado.");
+      }
+
+      setUsers((prev) =>
+        prev.map((u) =>
+          u.email === user.email ? { ...u, isActive: !u.isActive } : u
+        )
+      );
+    } catch (error) {
+      console.error("Error:", error);
+      setAlertData({ show: true, message: error.message, type: "error" });
+    } finally {
+      setUpdatingEmail(null);
+    }
+  };
 
   const filteredUsers = filterStatus
     ? users.filter(user => (filterStatus === "habilitado" ? user.isActive : !user.isActive))
@@ -88,8 +116,15 @@ const UsersTable = () => {
                   <td>{user.lastName}</td>
                   <td>{user.email}</td>
                   <td>{user.role}</td>
-                  <td className={user.isActive ? "habilitado" : "deshabilitado"}>
-                    {user.isActive ? "Habilitado" : "Deshabilitado"}
+                  <td>
+                    <button
+                      type="button"
+                      className={`status-toggle ${user.isActive ? "habilitado" : "deshabilitado"}`}
+                      disabled={updatingEmail === user.email || user.role === "SuperAdmin"}
+                      onClick={() => toggleStatus(user)}
+                    >
+                      {user.isActive ? "Habilitado" : "Deshabilitado"}
+                    </button>
                   </td>
                 </tr>
               ))}
