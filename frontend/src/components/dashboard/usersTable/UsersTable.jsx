@@ -16,6 +16,7 @@ const UsersTable = () => {
   const [loading, setLoading] = useState(false);
   const [alertData, setAlertData] = useState({ show: false, message: "", type: "" });
   const [filterStatus, setFilterStatus] = useState("");
+  const [search, setSearch] = useState("");
   const [updatingEmail, setUpdatingEmail] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [modalData, setModalData] = useState(null);
@@ -24,6 +25,7 @@ const UsersTable = () => {
   const [newUser, setNewUser] = useState(initialNewUser);
   const [newUserErrors, setNewUserErrors] = useState(initialNewUserErrors);
   const [creating, setCreating] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const firstNameRef = useRef(null);
   const lastNameRef = useRef(null);
   const emailRef = useRef(null);
@@ -110,6 +112,7 @@ const UsersTable = () => {
   const openCreateModal = () => {
     setNewUser(initialNewUser);
     setNewUserErrors(initialNewUserErrors);
+    setShowPassword(false);
     setShowCreateModal(true);
   };
 
@@ -196,9 +199,16 @@ const UsersTable = () => {
     }
   };
 
-  const filteredUsers = filterStatus
-    ? users.filter(user => (filterStatus === "habilitado" ? user.isActive : !user.isActive))
-    : users;
+  const filteredUsers = users.filter((user) => {
+    const q = search.trim().toLowerCase();
+    const matchesSearch =
+      !q ||
+      `${user.firstName} ${user.lastName}`.toLowerCase().includes(q) ||
+      user.email.toLowerCase().includes(q);
+    const matchesStatus =
+      !filterStatus || (filterStatus === "habilitado" ? user.isActive : !user.isActive);
+    return matchesSearch && matchesStatus;
+  });
 
   return (
     <>
@@ -217,6 +227,20 @@ const UsersTable = () => {
         <button type="button" className="custom-link fw-bold border-0 bg-transparent" onClick={openCreateModal}>
           + Crear Usuario
         </button>
+        <Form
+          className="d-flex align-items-center flex-wrap gap-3"
+          onSubmit={(e) => e.preventDefault()}
+        >
+          <div className="d-flex align-items-center">
+            <i className="bi bi-search me-2"></i>
+            <Form.Control
+              type="text"
+              className="custom-input"
+              placeholder="Buscar por nombre o correo"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
         <div>
         <label htmlFor="statusFilter" className="inputs-group me-3 fw-bold">Filtrar Usuarios por estado:</label>
         <select
@@ -230,6 +254,7 @@ const UsersTable = () => {
           <option value="deshabilitado">Deshabilitado</option>
         </select>
         </div>
+        </Form>
       </div>
 
           {filteredUsers.length === 0 ? (
@@ -365,18 +390,28 @@ const UsersTable = () => {
               )}
             </Form.Group>
 
-            <Form.Group className="inputs-group mb-3 fw-bold">
+            <Form.Group className="inputs-group mb-3 fw-bold position-relative">
               <Form.Label>Contraseña: <span className="text-danger">*</span></Form.Label>
               <Form.Control
                 ref={passwordRef}
                 className={`custom-input ${newUserErrors.password ? "is-invalid" : ""}`}
-                type="password"
+                type={showPassword ? "text" : "password"}
                 value={newUser.password}
                 onChange={(e) => {
                   setNewUser((prev) => ({ ...prev, password: e.target.value }));
                   setNewUserErrors((prev) => ({ ...prev, password: false }));
                 }}
               />
+              <span
+                className="password-toggle-icon"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? (
+                  <i className="bi bi-eye-slash-fill" />
+                ) : (
+                  <i className="bi bi-eye-fill" />
+                )}
+              </span>
               {newUserErrors.password === "empty" && (
                 <p className="text-danger mt-1">Debe ingresar una contraseña</p>
               )}
