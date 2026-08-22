@@ -341,7 +341,7 @@ const Login = () => {
             buttonType="submit"
             loading={loading}
             loadingText="Verificando...">
-                  <p className="text-center mb-3">
+                  <p className="text-center text-white mb-3">
                     Ingresá el código que enviamos a <strong>{email}</strong>.
                   </p>
                   <Form.Group className="inputs-group mb-3 fw-bold">
