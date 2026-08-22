@@ -10,7 +10,7 @@ import Background from "../background/Background";
 import BackArrow from "../back/BackArrow";
 import CustomCard from "../card/CustomCard";
 import CustomAlert from "../alert/CustomAlert";
-import CustomModal from "../modal/CustomModal";
+import VerificationCodeModal from "../modal/VerificationCodeModal";
 
 const ForgotPassword = () => {
   const navigate = useNavigate();
@@ -259,41 +259,29 @@ const ForgotPassword = () => {
             </CustomCard>
           </Form>
 
-          <CustomModal
+          <VerificationCodeModal
+            ref={codeRef}
             show={step === "reset"}
             onHide={() => setStep("request")}
-            onContinue={handleReset}
-            continueText={loading ? "Restableciendo..." : "Restablecer contraseña"}
-            continueDisabled={loading}
+            email={email}
+            code={code}
+            onCodeChange={(e) => {
+              setCode(e.target.value);
+              setResetErrors((prev) => ({ ...prev, code: false }));
+            }}
+            codeError={resetErrors.code === "empty"}
+            onSubmit={handleReset}
+            loading={loading}
             title="RESTABLECÉ TU CONTRASEÑA"
-            body={
-              <Form noValidate onSubmit={handleReset}>
-                <p className="text-center mb-3">
-                  Ingresá el código que enviamos a <strong>{email}</strong> y tu nueva contraseña.
-                </p>
-
-                <Form.Group className="inputs-group mb-3 fw-bold">
-                  <Form.Label>
-                    Código de verificación: <span className="text-danger">*</span>
-                  </Form.Label>
-                  <Form.Control
-                    ref={codeRef}
-                    className={`custom-input ${resetErrors.code ? "is-invalid" : ""}`}
-                    type="text"
-                    inputMode="numeric"
-                    placeholder="Ej: 123456"
-                    value={code}
-                    onChange={(e) => {
-                      setCode(e.target.value);
-                      setResetErrors((prev) => ({ ...prev, code: false }));
-                    }}
-                    autoComplete="one-time-code"
-                  />
-                  {resetErrors.code === "empty" && (
-                    <p className="text-danger mt-1">Debe ingresar el código de verificación</p>
-                  )}
-                </Form.Group>
-
+            continueText="Restablecer contraseña"
+            loadingText="Restableciendo..."
+            description={
+              <>
+                Ingresá el código que enviamos a <strong>{email}</strong> y tu nueva contraseña.
+              </>
+            }
+            footerLink={{ text: "Reenviar código", onClick: handleResendCode }}
+          >
                 <Form.Group className="inputs-group mb-3 fw-bold position-relative">
                   <Form.Label>
                     Nueva contraseña: <span className="text-danger">*</span>
@@ -350,21 +338,7 @@ const ForgotPassword = () => {
                     <p className="text-danger mt-1">Las contraseñas no coinciden</p>
                   )}
                 </Form.Group>
-
-                <div className="inputs-group mt-3 text-center">
-                  <Form.Label>
-                    <span
-                      className="text-decoration-none custom-link"
-                      style={{ cursor: "pointer" }}
-                      onClick={handleResendCode}
-                    >
-                      Reenviar código
-                    </span>
-                  </Form.Label>
-                </div>
-              </Form>
-            }
-          />
+          </VerificationCodeModal>
         </div>
       </Background>
     </>

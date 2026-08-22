@@ -12,6 +12,7 @@ import Background from "../background/Background";
 import BackArrow from "../back/BackArrow";
 import CustomAlert from "../alert/CustomAlert";
 import CustomCard from "../card/CustomCard";
+import VerificationCodeModal from "../modal/VerificationCodeModal";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -244,7 +245,6 @@ const Login = () => {
           />
           <Row>
             <Col>
-            {step === "credentials" ? (
             <Form noValidate onSubmit={handleSubmit}>
               <CustomCard
             title="INICIAR SESIÓN"
@@ -333,56 +333,23 @@ const Login = () => {
 
               </CustomCard>
               </Form>
-            ) : (
-            <Form noValidate onSubmit={handleVerifyTwoFactor}>
-              <CustomCard
-            title="VERIFICACIÓN"
-            buttonText="Verificar"
-            buttonType="submit"
-            loading={loading}
-            loadingText="Verificando...">
-                  <p className="text-center text-white mb-3">
-                    Ingresá el código que enviamos a <strong>{email}</strong>.
-                  </p>
-                  <Form.Group className="inputs-group mb-3 fw-bold">
-                    <Form.Label>Código de verificación: <span className="text-danger">*</span></Form.Label>
-                    <Form.Control
-                      ref={codeRef}
-                      className={`custom-input ${codeError ? "is-invalid" : ""}`}
-                      type="text"
-                      inputMode="numeric"
-                      placeholder="Ej: 123456"
-                      value={code}
-                      onChange={(e) => {
-                        setCode(e.target.value);
-                        setCodeError(false);
-                      }}
-                      autoComplete="one-time-code"
-                    />
-                    {codeError && (
-                      <p className="text-danger mt-1">
-                        Debe ingresar el código de verificación
-                      </p>
-                    )}
-                  </Form.Group>
-
-                  <div className="inputs-group mt-3 text-center">
-                    <Form.Label>
-                      <span
-                        className="text-decoration-none custom-link"
-                        style={{ cursor: "pointer" }}
-                        onClick={handleBackToCredentials}
-                      >
-                        Volver
-                      </span>
-                    </Form.Label>
-                  </div>
-
-              </CustomCard>
-              </Form>
-            )}
             </Col>
           </Row>
+
+          <VerificationCodeModal
+            ref={codeRef}
+            show={step === "twofactor"}
+            onHide={handleBackToCredentials}
+            email={email}
+            code={code}
+            onCodeChange={(e) => {
+              setCode(e.target.value);
+              setCodeError(false);
+            }}
+            codeError={codeError}
+            onSubmit={handleVerifyTwoFactor}
+            loading={loading}
+          />
           </div>
         </Container>
       </Background>
