@@ -9,18 +9,7 @@ import CustomCard from "../../card/CustomCard";
 import CustomAlert from "../../alert/CustomAlert";
 import CustomModal from "../../modal/CustomModal";
 import { validateEmail } from "../../../utils/validators";
-
-const roleMap = {
-  Client: 1,
-  Employee: 2,
-  SuperAdmin: 3,
-};
-
-const roleLabels = {
-  Client: "Usuario",
-  Employee: "Empleado",
-  SuperAdmin: "Super Admin",
-};
+import { roleLabels, roleMap } from "../../../utils/roleLabels";
 
 const ModifyRole = () => {
   const { role, token } = useContext(AuthContext);

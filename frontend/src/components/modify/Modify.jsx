@@ -7,14 +7,13 @@ import Backgrpund from "../background/Background";
 import BackArrow from "../back/BackArrow";
 import ModifyState from "./state/ModifyState";
 import ModifyRole from "./role/ModifyRole";
-import LowUser from "./low/LowUser";
 
 
 const Modify = () => {
   const { role, token } = useContext(AuthContext);
 
   const buttonsByRole = {
-    SuperAdmin: ["status", "roles", "low"],
+    SuperAdmin: ["status", "roles"],
     Employee: ["status"],
   };
 
@@ -26,7 +25,6 @@ const Modify = () => {
   const buttons = [
     { key: "status", label: "Modificar Estado" },
     { key: "roles", label: "Modificar Rol" },
-    { key: "low", label: "Elimiar Usuario" },
   ];
 
 const visibleButtons = buttons.filter((btn) =>
@@ -44,7 +42,6 @@ const visibleButtons = buttons.filter((btn) =>
               <Col>
                 {activeComponent === "status" && allowedButtons.includes("status") && <ModifyState />}
                 {activeComponent === "roles" && allowedButtons.includes("roles") && <ModifyRole />}
-                {activeComponent === "low" && allowedButtons.includes("low") && <LowUser />}
               </Col>
             </Row>
           </div>
