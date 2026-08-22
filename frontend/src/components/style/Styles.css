@@ -305,18 +305,34 @@ label,
 }
 
 .status-toggle {
-  background: none;
   border: none;
-  padding: 0;
+  border-radius: 0.375rem;
+  padding: 0.25rem 0.75rem;
   font: inherit;
+  font-weight: bold;
+  color: #ffffff;
   cursor: pointer;
-  text-decoration: underline;
+}
+
+.status-toggle.habilitado {
+  background-color: #3f7f07;
+}
+
+.status-toggle.habilitado:hover:not(:disabled) {
+  background-color: #2c5a05;
+}
+
+.status-toggle.deshabilitado {
+  background-color: #b01b17;
+}
+
+.status-toggle.deshabilitado:hover:not(:disabled) {
+  background-color: #7f1310;
 }
 
 .status-toggle:disabled {
   cursor: not-allowed;
-  text-decoration: none;
-  opacity: 0.7;
+  opacity: 0.5;
 }
 
 /*ButtonBar*/
