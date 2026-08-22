@@ -12,7 +12,7 @@ import Background from "../background/Background";
 import BackArrow from "../back/BackArrow";
 import CustomCard from "../card/CustomCard";
 import CustomAlert from "../alert/CustomAlert";
-import CustomModal from "../modal/CustomModal";
+import VerificationCodeModal from "../modal/VerificationCodeModal";
 
 import "../style/Styles.css";
 
@@ -363,43 +363,20 @@ const UserRegister = () => {
               </CustomCard>
           </Form>
 
-          <CustomModal
+          <VerificationCodeModal
+            ref={codeRef}
             show={step === "verify"}
             onHide={() => setStep("form")}
-            onContinue={handleVerify}
-            continueText={loading ? "Verificando..." : "Verificar"}
-            continueDisabled={loading}
+            email={email}
+            code={code}
+            onCodeChange={(e) => {
+              setCode(e.target.value);
+              setCodeError(false);
+            }}
+            codeError={codeError}
+            onSubmit={handleVerify}
+            loading={loading}
             title="VERIFICÁ TU EMAIL"
-            body={
-              <Form noValidate onSubmit={handleVerify}>
-                <p className="text-center mb-3">
-                  Ingresá el código que enviamos a <strong>{email}</strong>.
-                </p>
-                <Form.Group className="inputs-group mb-3 fw-bold">
-                  <Form.Label>
-                    Código de verificación: <span className="text-danger">*</span>
-                  </Form.Label>
-                  <Form.Control
-                    ref={codeRef}
-                    className={`custom-input ${codeError ? "is-invalid" : ""}`}
-                    type="text"
-                    inputMode="numeric"
-                    placeholder="Ej: 123456"
-                    value={code}
-                    onChange={(e) => {
-                      setCode(e.target.value);
-                      setCodeError(false);
-                    }}
-                    autoComplete="one-time-code"
-                  />
-                  {codeError && (
-                    <p className="text-danger mt-1">
-                      Debe ingresar el código de verificación
-                    </p>
-                  )}
-                </Form.Group>
-              </Form>
-            }
           />
         </div>
       </Background>
