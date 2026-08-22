@@ -3,6 +3,7 @@ import { Container, Form } from "react-bootstrap";
 import CustomModal from "../../modal/CustomModal";
 import CustomAlert from "../../alert/CustomAlert";
 import { apiFetch } from "../../../api/httpClient";
+import ShipmentHistory from "../../shipment/ShipmentHistory";
 
 const typeLabels = { Express: "Expreso", Standard: "Estándar" };
 const sizeLabels = { Small: "Pequeño", Medium: "Mediano", Large: "Grande" };
@@ -228,6 +229,7 @@ const ShipmentsTable = () => {
                   {item.value}
                 </div>
               ))}
+              <ShipmentHistory shipmentId={modalData.id} />
             </div>
           }
         />

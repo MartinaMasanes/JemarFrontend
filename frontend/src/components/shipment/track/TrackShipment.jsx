@@ -5,6 +5,7 @@ import CustomCard from "../../card/CustomCard";
 import CustomModal from "../../modal/CustomModal";
 import { AuthContext } from "../../authContext/AuthContext";
 import { apiFetch } from "../../../api/httpClient";
+import ShipmentHistory from "../ShipmentHistory";
 
 const typeLabels = { Express: "Expreso", Standard: "Estándar" };
 const sizeLabels = { Small: "Pequeño", Medium: "Mediano", Large: "Grande" };
@@ -242,6 +243,7 @@ function ShippingTrack() {
                   {item.value}
                 </div>
               ))}
+              <ShipmentHistory shipmentId={modalData.id} />
             </div>
           }
         />
