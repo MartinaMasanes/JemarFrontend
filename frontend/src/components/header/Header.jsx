@@ -27,7 +27,7 @@ const Header = () => {
           className="header d-flex justify-content-center position-fixed top-0 start-50 translate-middle-x"
         >
           <img
-            src="./public/images/Icon.svg"
+            src="/images/Icon.svg"
             alt="Icono"
             height={40}
             className="me-2"
