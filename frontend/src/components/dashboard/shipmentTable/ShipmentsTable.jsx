@@ -4,7 +4,6 @@ import CustomModal from "../../modal/CustomModal";
 import CustomAlert from "../../alert/CustomAlert";
 import { apiFetch } from "../../../api/httpClient";
 import ShipmentHistory from "../../shipment/ShipmentHistory";
-import PaymentSection from "../../payment/PaymentSection";
 
 const typeLabels = { Express: "Expreso", Standard: "Estándar" };
 const sizeLabels = { Small: "Pequeño", Medium: "Mediano", Large: "Grande" };
@@ -230,7 +229,6 @@ const ShipmentsTable = () => {
                   {item.value}
                 </div>
               ))}
-              <PaymentSection shipment={modalData} />
               <ShipmentHistory shipmentId={modalData.id} />
             </div>
           }

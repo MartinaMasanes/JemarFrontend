@@ -9,12 +9,14 @@ const variantTitles = {
   failure: "Pago rechazado",
 };
 
-const statusMessages = {
-  Approved: "¡Tu pago fue aprobado! Ya podés ver el envío como pagado.",
-  Pending: "Tu pago está en proceso. Te avisaremos cuando se confirme.",
-  Rejected: "El pago fue rechazado. Podés intentarlo nuevamente desde el envío.",
-  Cancelled: "El pago fue cancelado.",
-};
+const statusMessages = (data) => ({
+  Approved: `¡Tu pago fue aprobado y tu envío fue creado! N° ${data?.shipmentId ?? ""}`,
+  Pending:
+    "Tu pago está en proceso. En cuanto se confirme, tu envío se va a crear automáticamente.",
+  Rejected:
+    "El pago fue rechazado, así que el envío no se creó. Podés intentarlo de nuevo desde 'Crear envío'.",
+  Cancelled: "El pago fue cancelado. El envío no se creó.",
+});
 
 const PaymentResult = ({ variant }) => {
   const [searchParams] = useSearchParams();
@@ -27,7 +29,7 @@ const PaymentResult = ({ variant }) => {
 
     if (!paymentId) {
       setMessage(
-        "No encontramos información de este pago. Si ya pagaste, revisá el estado desde el detalle del envío."
+        "No encontramos información de este pago. Si ya pagaste y no ves tu envío, escribinos por consultas."
       );
       setLoading(false);
       return;
@@ -39,13 +41,13 @@ const PaymentResult = ({ variant }) => {
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         setMessage(
-          (data && statusMessages[data.status]) ||
-            "No pudimos confirmar el estado del pago. Revisalo desde el detalle del envío."
+          (data && statusMessages(data)[data.status]) ||
+            "No pudimos confirmar el estado del pago. Si ya pagaste y no ves tu envío, escribinos por consultas."
         );
       })
       .catch(() => {
         setMessage(
-          "No pudimos confirmar el estado del pago. Revisalo desde el detalle del envío."
+          "No pudimos confirmar el estado del pago. Si ya pagaste y no ves tu envío, escribinos por consultas."
         );
       })
       .finally(() => setLoading(false));

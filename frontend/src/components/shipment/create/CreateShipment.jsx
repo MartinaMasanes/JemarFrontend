@@ -400,7 +400,7 @@ const ShippingQuote = () => {
   const confirmCreateShipment = async () => {
     try {
       setSubmitting(true);
-      const response = await apiFetch("/api/shipment", {
+      const response = await apiFetch("/api/payment/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -415,26 +415,18 @@ const ShippingQuote = () => {
 
       const data = await response.json();
       if (!response.ok)
-        throw new Error(data.error || "No se pudo crear el envío.");
+        throw new Error(data.error || "No se pudo iniciar el pago.");
 
-      setShowConfirmModal(false);
-      setQuote(null);
-      setAlertData({
-        show: true,
-        message: `¡Envío creado con éxito!`,
-        type: "success",
-      });
-      resetShipmentForm();
+      window.location.href = data.initPoint;
     } catch (error) {
-      console.error("Error creando envío:", error);
+      console.error("Error iniciando el pago del envío:", error);
       setShowConfirmModal(false);
       setQuote(null);
       setAlertData({
         show: true,
-        message: "No se pudo crear el envío.",
+        message: "No se pudo iniciar el pago del envío.",
         type: "error",
       });
-    } finally {
       setSubmitting(false);
     }
   };
@@ -680,7 +672,8 @@ const ShippingQuote = () => {
           show={showConfirmModal}
           onHide={cancelCreateShipment}
           onContinue={confirmCreateShipment}
-          continueText="Confirmar envío"
+          continueText={submitting ? "Redirigiendo..." : "Ir a pagar"}
+          continueDisabled={submitting}
           title={
             <span>
               Envío N°:
