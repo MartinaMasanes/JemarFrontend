@@ -14,6 +14,7 @@ import Profile from "./components/profile/Profile";
 import Modify from "./components/modify/Modify";
 import Dashboard from "./components/dashboard/Dashboard";
 import ErrorNotLogged from "./components/error/errorNotLogged/errorNotLogged";
+import PaymentResult from "./components/payment/PaymentResult";
 
 import Protected from "./components/protected/Protected";
 import RoleProtected from "./components/protected/RoleProtected";
@@ -37,6 +38,18 @@ function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/register" element={<UserRegister />} />
           <Route path="/contact" element={<ContactForm />} />
+          <Route
+            path="/payment/success"
+            element={<PaymentResult variant="success" />}
+          />
+          <Route
+            path="/payment/pending"
+            element={<PaymentResult variant="pending" />}
+          />
+          <Route
+            path="/payment/failure"
+            element={<PaymentResult variant="failure" />}
+          />
 
           <Route element={<Protected />}>
             <Route path="/shipment" element={<Shipments />} />
