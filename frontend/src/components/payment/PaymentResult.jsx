@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
+import { Container } from "react-bootstrap";
+import Background from "../background/Background";
 import CustomCard from "../card/CustomCard";
 import { apiFetch } from "../../api/httpClient";
 
@@ -54,13 +56,21 @@ const PaymentResult = ({ variant }) => {
   }, [searchParams]);
 
   return (
-    <CustomCard
-      title={variantTitles[variant] || "Resultado del pago"}
-      buttonText={loading ? undefined : "Volver a mis envíos"}
-      buttonAction={() => navigate("/shipment")}
-    >
-      {loading ? <p className="mb-0">Confirmando el pago...</p> : <p className="mb-0">{message}</p>}
-    </CustomCard>
+    <Background image="/images/ImageContact.webp">
+      <Container className="d-flex align-items-center justify-content-center min-vh-100">
+        <CustomCard
+          title={variantTitles[variant] || "Resultado del pago"}
+          buttonText={loading ? undefined : "Volver a mis envíos"}
+          buttonAction={() => navigate("/shipment")}
+        >
+          {loading ? (
+            <p className="sub-titulo mb-0">Confirmando el pago...</p>
+          ) : (
+            <p className="sub-titulo mb-0">{message}</p>
+          )}
+        </CustomCard>
+      </Container>
+    </Background>
   );
 };
 
